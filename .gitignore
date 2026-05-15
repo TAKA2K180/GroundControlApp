@@ -1,0 +1,66 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+
+# Visual Studio / Rider / local IDE state
+.vs/
+.vscode/
+.idea/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+*.lscache
+
+# .NET
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+*.nupkg
+*.snupkg
+
+# MAUI / mobile packaging output
+*.apk
+*.aab
+*.ipa
+*.app
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+*.cer
+*.pfx
+*.keystore
+*.jks
+
+# Android generated files
+local.properties
+*.apk.idsig
+
+# Apple generated files
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Logs and diagnostics
+*.log
+*.binlog
+*.trx
+
+# User secrets / local configuration
+appsettings.Development.local.json
+appsettings.Local.json
+*.local.json
+.env
+.env.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GroundControlApp.Main.Views.AdminPanelPage"
+             x:Name="AdminPage"
+             BackgroundColor="#F4F6F8">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="18" Spacing="14">
+            <Border Padding="16"
+                    BackgroundColor="#14213D"
+                    Stroke="#14213D"
+                    StrokeShape="RoundRectangle 8">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="3">
+                        <Label Text="Back Office"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="24"
+                               TextColor="#FFFFFF" />
+                        <Label Text="Admin tools"
+                               FontSize="12"
+                               TextColor="#C7D7FE" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="1"
+                            Text="POS"
+                            Command="{Binding BackCommand}"
+                            BackgroundColor="#FFFFFF"
+                            TextColor="#14213D"
+                            CornerRadius="8"
+                            VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10" RowSpacing="10">
+                <Border Style="{StaticResource PosAdminMetricStyle}">
+                    <VerticalStackLayout>
+                        <Label Text="Today Sales" Style="{StaticResource PosMetaStyle}" />
+                        <Label Text="PHP 18,420.00" Style="{StaticResource PosAdminMetricValueStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource PosAdminMetricStyle}">
+                    <VerticalStackLayout>
+                        <Label Text="Open Orders" Style="{StaticResource PosMetaStyle}" />
+                        <Label Text="6" Style="{StaticResource PosAdminMetricValueStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource PosAdminMetricStyle}">
+                    <VerticalStackLayout>
+                        <Label Text="Low Stock" Style="{StaticResource PosMetaStyle}" />
+                        <Label Text="3" Style="{StaticResource PosAdminMetricValueStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="3" Style="{StaticResource PosAdminMetricStyle}">
+                    <VerticalStackLayout>
+                        <Label Text="Active Staff" Style="{StaticResource PosMetaStyle}" />
+                        <Label Text="4" Style="{StaticResource PosAdminMetricValueStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Label Text="Processes"
+                   FontFamily="OpenSansSemibold"
+                   FontSize="18"
+                   TextColor="#14213D" />
+
+            <CollectionView ItemsSource="{Binding ProcessItems}"
+                            SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical"
+                                     Span="2"
+                                     HorizontalItemSpacing="10"
+                                     VerticalItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource PosAdminCardStyle}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding BindingContext.OpenProcessCommand, Source={x:Reference AdminPage}}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+                                <Label Text="{Binding Title}"
+                                       FontFamily="OpenSansSemibold"
+                                       FontSize="16"
+                                       TextColor="#14213D" />
+                                <Label Grid.Row="1"
+                                       Text="{Binding Description}"
+                                       FontSize="12"
+                                       TextColor="#667085"
+                                       LineBreakMode="WordWrap" />
+                                <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding Status}" Style="{StaticResource PosMetaStyle}" />
+                                    <Label Grid.Column="1" Text="{Binding Metric}" Style="{StaticResource PosPriceStyle}" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label Text="Daily Workflow"
+                   FontFamily="OpenSansSemibold"
+                   FontSize="18"
+                   TextColor="#14213D" />
+
+            <CollectionView ItemsSource="{Binding WorkflowItems}"
+                            SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource PosAdminCardStyle}">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="{Binding Title}"
+                                           FontFamily="OpenSansSemibold"
+                                           FontSize="15"
+                                           TextColor="#14213D" />
+                                    <Label Text="{Binding Description}"
+                                           FontSize="12"
+                                           TextColor="#667085" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1"
+                                                     Spacing="3"
+                                                     HorizontalOptions="End">
+                                    <Label Text="{Binding Status}"
+                                           FontSize="12"
+                                           TextColor="#667085"
+                                           HorizontalTextAlignment="End" />
+                                    <Label Text="{Binding Metric}"
+                                           Style="{StaticResource PosPriceStyle}"
+                                           HorizontalTextAlignment="End" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

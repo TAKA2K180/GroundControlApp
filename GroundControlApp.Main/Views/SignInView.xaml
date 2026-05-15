@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GroundControlApp.Main.Views.SignInView"
+             IsVisible="{Binding IsSignInVisible}">
+
+    <Grid BackgroundColor="#99000000"
+          Padding="18">
+        <Border Padding="18"
+                MaximumWidthRequest="430"
+                BackgroundColor="#FFFFFF"
+                Stroke="#DDE3EA"
+                StrokeShape="RoundRectangle 8"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="14">
+                <VerticalStackLayout Spacing="3">
+                    <Label Text="Sign in"
+                           FontFamily="OpenSansSemibold"
+                           FontSize="22"
+                           TextColor="#14213D" />
+                    <Label Text="Use an admin, manager, cashier, or barista account."
+                           FontSize="12"
+                           TextColor="#667085" />
+                    <Label Text="Temporary test account: admin@groundcontrol.local / 1234"
+                           FontSize="12"
+                           TextColor="#087443" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Email"
+                           FontSize="12"
+                           TextColor="#344054" />
+                    <Border Padding="10,0"
+                            BackgroundColor="#F8FAFC"
+                            Stroke="#DDE3EA"
+                            StrokeShape="RoundRectangle 8"
+                            HeightRequest="46">
+                        <Entry Text="{Binding SignInEmail}"
+                               Keyboard="Email"
+                               Placeholder="admin@groundcontrol.local"
+                               PlaceholderColor="#98A2B3"
+                               TextColor="#111827"
+                               BackgroundColor="Transparent" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Password or PIN"
+                           FontSize="12"
+                           TextColor="#344054" />
+                    <Border Padding="10,0"
+                            BackgroundColor="#F8FAFC"
+                            Stroke="#DDE3EA"
+                            StrokeShape="RoundRectangle 8"
+                            HeightRequest="46">
+                        <Entry Text="{Binding SignInSecret}"
+                               IsPassword="True"
+                               Placeholder="Enter password or PIN"
+                               PlaceholderColor="#98A2B3"
+                               TextColor="#111827"
+                               BackgroundColor="Transparent" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <Label Text="{Binding SignInMessage}"
+                       FontSize="12"
+                       TextColor="#B42318" />
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Text="Cancel"
+                            Command="{Binding HideSignInCommand}"
+                            BackgroundColor="#F4F6F8"
+                            TextColor="#344054"
+                            CornerRadius="8" />
+                    <Button Grid.Column="1"
+                            Text="Sign In"
+                            Command="{Binding SignInCommand}"
+                            BackgroundColor="#14213D"
+                            TextColor="#FFFFFF"
+                            CornerRadius="8" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentView>

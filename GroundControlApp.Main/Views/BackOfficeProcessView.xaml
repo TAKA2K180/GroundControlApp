@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GroundControlApp.Main.Views.BackOfficeProcessView">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="18" Spacing="14">
+            <Border Padding="16"
+                    BackgroundColor="#14213D"
+                    Stroke="#14213D"
+                    StrokeShape="RoundRectangle 8">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="3">
+                        <Label Text="{Binding Title}"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="24"
+                               TextColor="#FFFFFF" />
+                        <Label Text="{Binding Subtitle}"
+                               FontSize="12"
+                               TextColor="#C7D7FE"
+                               LineBreakMode="WordWrap" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="1"
+                            Text="Back"
+                            Command="{Binding BackCommand}"
+                            BackgroundColor="#FFFFFF"
+                            TextColor="#14213D"
+                            CornerRadius="8"
+                            VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" RowSpacing="10">
+                <Border Style="{StaticResource PosAdminMetricStyle}">
+                    <VerticalStackLayout>
+                        <Label Text="Primary" Style="{StaticResource PosMetaStyle}" />
+                        <Label Text="{Binding PrimaryMetric}" Style="{StaticResource PosAdminMetricValueStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource PosAdminMetricStyle}">
+                    <VerticalStackLayout>
+                        <Label Text="Secondary" Style="{StaticResource PosMetaStyle}" />
+                        <Label Text="{Binding SecondaryMetric}" Style="{StaticResource PosAdminMetricValueStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource PosAdminMetricStyle}">
+                    <VerticalStackLayout>
+                        <Label Text="Status" Style="{StaticResource PosMetaStyle}" />
+                        <Label Text="{Binding TertiaryMetric}" Style="{StaticResource PosAdminMetricValueStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Label Text="Work Queue"
+                   FontFamily="OpenSansSemibold"
+                   FontSize="18"
+                   TextColor="#14213D" />
+
+            <CollectionView ItemsSource="{Binding Tasks}"
+                            SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical"
+                                     Span="3"
+                                     HorizontalItemSpacing="10"
+                                     VerticalItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource PosAdminCardStyle}">
+                            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+                                <Label Text="{Binding Title}"
+                                       FontFamily="OpenSansSemibold"
+                                       FontSize="15"
+                                       TextColor="#14213D" />
+                                <Label Grid.Row="1"
+                                       Text="{Binding Description}"
+                                       FontSize="12"
+                                       TextColor="#667085"
+                                       LineBreakMode="WordWrap" />
+                                <Button Grid.Row="2"
+                                        Text="{Binding ActionText}"
+                                        BackgroundColor="#EEF4FF"
+                                        TextColor="#175CD3"
+                                        CornerRadius="8" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label Text="Recent Records"
+                   FontFamily="OpenSansSemibold"
+                   FontSize="18"
+                   TextColor="#14213D" />
+
+            <CollectionView ItemsSource="{Binding Records}"
+                            SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource PosAdminCardStyle}">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="{Binding Primary}"
+                                           FontFamily="OpenSansSemibold"
+                                           FontSize="15"
+                                           TextColor="#14213D" />
+                                    <Label Text="{Binding Secondary}"
+                                           FontSize="12"
+                                           TextColor="#667085" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1"
+                                                     Spacing="3"
+                                                     HorizontalOptions="End">
+                                    <Label Text="{Binding Amount}"
+                                           Style="{StaticResource PosPriceStyle}"
+                                           HorizontalTextAlignment="End" />
+                                    <Label Text="{Binding Status}"
+                                           FontSize="12"
+                                           TextColor="#667085"
+                                           HorizontalTextAlignment="End" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>

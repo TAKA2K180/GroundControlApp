@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="GroundControlApp.Core/GroundControlApp.Core.csproj" />
+  <Project Path="GroundControlApp.Data/GroundControlApp.Data.csproj" />
+  <Project Path="GroundControlApp.Main/GroundControlApp.Main.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>

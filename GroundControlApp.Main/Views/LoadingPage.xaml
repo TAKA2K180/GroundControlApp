@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GroundControlApp.Main.Views.LoadingPage"
+             BackgroundColor="#14213D">
+
+    <Grid Padding="24"
+          RowDefinitions="*,Auto,*">
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="18"
+                             MaximumWidthRequest="520"
+                             HorizontalOptions="Center"
+                             VerticalOptions="Center">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Ground Control"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="30"
+                       TextColor="#FFFFFF"
+                       HorizontalTextAlignment="Center" />
+                <Label Text="Point of Sale"
+                       FontSize="14"
+                       TextColor="#C7D7FE"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               Color="#12B76A"
+                               WidthRequest="40"
+                               HeightRequest="40"
+                               HorizontalOptions="Center" />
+
+            <VerticalStackLayout Spacing="8">
+                <ProgressBar Progress="{Binding Progress}"
+                             ProgressColor="#12B76A"
+                             BackgroundColor="#243B64"
+                             HeightRequest="8" />
+                <Label Text="{Binding StatusMessage}"
+                       FontSize="13"
+                       TextColor="#EAF0FF"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

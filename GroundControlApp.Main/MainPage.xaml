@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:views="clr-namespace:GroundControlApp.Main.Views"
+             x:Class="GroundControlApp.Main.MainPage"
+             x:Name="RootPage"
+             BackgroundColor="#F4F6F8">
+
+    <Grid>
+    <ScrollView>
+        <Grid x:Name="RootGrid"
+              Padding="18"
+              ColumnSpacing="14"
+              RowSpacing="14"
+              RowDefinitions="Auto,*"
+              ColumnDefinitions="1.45*,1*,360">
+
+            <Border x:Name="HeaderPanel"
+                    Grid.Row="0"
+                    Grid.ColumnSpan="3"
+                    Padding="16"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#DDE3EA"
+                    StrokeShape="RoundRectangle 8">
+                <Grid x:Name="HeaderGrid"
+                      ColumnSpacing="12"
+                      RowSpacing="10"
+                      ColumnDefinitions="Auto,*,Auto"
+                      RowDefinitions="Auto">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Ground Control"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="22"
+                               TextColor="#14213D"
+                               SemanticProperties.HeadingLevel="Level1" />
+                        <Label Text="{Binding ShiftStatus}"
+                               FontSize="12"
+                               TextColor="#667085" />
+                    </VerticalStackLayout>
+
+                    <Border x:Name="SearchBox"
+                            Grid.Column="1"
+                            Padding="12,0"
+                            BackgroundColor="#F4F6F8"
+                            Stroke="#DDE3EA"
+                            StrokeShape="RoundRectangle 8"
+                            HeightRequest="46">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                            <Label Text="Search"
+                                   TextColor="#667085"
+                                   FontSize="13"
+                                   VerticalOptions="Center" />
+                            <Entry Grid.Column="1"
+                                   Text="{Binding SearchText}"
+                                   Placeholder="blend, roast, or barcode"
+                                   PlaceholderColor="#98A2B3"
+                                   TextColor="#111827"
+                                   BackgroundColor="Transparent"
+                                   ClearButtonVisibility="WhileEditing"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <HorizontalStackLayout x:Name="HeaderActions"
+                                           Grid.Column="2"
+                                           Spacing="8"
+                                           HorizontalOptions="End"
+                                           VerticalOptions="Center">
+                        <Button Text="{Binding SignInButtonText}"
+                                Command="{Binding ShowSignInCommand}"
+                                IsVisible="{Binding IsGuestVisible}"
+                                BackgroundColor="#F4F6F8"
+                                TextColor="#344054"
+                                CornerRadius="8" />
+                        <Button Text="Admin"
+                                Command="{Binding OpenAdminCommand}"
+                                IsVisible="{Binding IsAdminVisible}"
+                                BackgroundColor="#EEF4FF"
+                                TextColor="#175CD3"
+                                CornerRadius="8" />
+                        <Button Text="Sync"
+                                Command="{Binding SyncCommand}"
+                                BackgroundColor="#EEF4FF"
+                                TextColor="#175CD3"
+                                CornerRadius="8" />
+                        <Button Text="Open Shift"
+                                Command="{Binding OpenShiftCommand}"
+                                BackgroundColor="#14213D"
+                                TextColor="#FFFFFF"
+                                CornerRadius="8" />
+                    </HorizontalStackLayout>
+                </Grid>
+            </Border>
+
+            <Border x:Name="ProductPanel"
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Padding="16"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#DDE3EA"
+                    StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Catalog"
+                                   FontFamily="OpenSansSemibold"
+                                   FontSize="18"
+                                   TextColor="#14213D" />
+                            <Label Text="{Binding SyncStatus}"
+                                   FontSize="12"
+                                   TextColor="#667085" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Scan"
+                                BackgroundColor="#EAF8F0"
+                                TextColor="#087443"
+                                CornerRadius="8"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <CollectionView ItemsSource="{Binding Categories}"
+                                    SelectionMode="None"
+                                    HeightRequest="48">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Button Text="{Binding Name}"
+                                        Command="{Binding BindingContext.SelectCategoryCommand, Source={x:Reference RootPage}}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="{Binding BackgroundColor}"
+                                        TextColor="{Binding TextColor}"
+                                        CornerRadius="8" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <CollectionView x:Name="ProductList"
+                                    ItemsSource="{Binding Products}"
+                                    SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout x:Name="ProductItemsLayout"
+                                             Orientation="Vertical"
+                                             Span="3"
+                                             HorizontalItemSpacing="10"
+                                             VerticalItemSpacing="10" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource PosTileStyle}">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding BindingContext.AddProductCommand, Source={x:Reference RootPage}}"
+                                                              CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid RowDefinitions="*,Auto,Auto">
+                                        <Label Text="{Binding Name}" Style="{StaticResource PosProductNameStyle}" />
+                                        <Label Grid.Row="1" Text="{Binding Category}" Style="{StaticResource PosMetaStyle}" />
+                                        <Label Grid.Row="2" Text="{Binding DisplayPrice}" Style="{StaticResource PosPriceStyle}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border x:Name="CartPanel"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Padding="16"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#DDE3EA"
+                    StrokeShape="RoundRectangle 8">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Current Ticket"
+                                   FontFamily="OpenSansSemibold"
+                                   FontSize="18"
+                                   TextColor="#14213D" />
+                            <Label Text="{Binding TicketStatus}"
+                                   FontSize="12"
+                                   TextColor="#667085" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Hold"
+                                Command="{Binding HoldTicketCommand}"
+                                BackgroundColor="#FFF6E5"
+                                TextColor="#B54708"
+                                CornerRadius="8" />
+                    </Grid>
+
+                    <CollectionView x:Name="CartList"
+                                    Grid.Row="1"
+                                    ItemsSource="{Binding CartItems}"
+                                    SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Style="{StaticResource PosLineItemStyle}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Name}" Style="{StaticResource PosLineNameStyle}" />
+                                        <Label Text="{Binding Detail}" Style="{StaticResource PosMetaStyle}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="{Binding TotalDisplay}" Style="{StaticResource PosLineAmountStyle}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <VerticalStackLayout Grid.Row="2" Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Subtotal" Style="{StaticResource PosMetaStyle}" />
+                            <Label Grid.Column="1" Text="{Binding SubtotalDisplay}" Style="{StaticResource PosLineAmountStyle}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Tax" Style="{StaticResource PosMetaStyle}" />
+                            <Label Grid.Column="1" Text="{Binding TaxDisplay}" Style="{StaticResource PosLineAmountStyle}" />
+                        </Grid>
+                        <BoxView HeightRequest="1" BackgroundColor="#E4E7EC" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Total"
+                                   FontFamily="OpenSansSemibold"
+                                   FontSize="18"
+                                   TextColor="#14213D" />
+                            <Label Grid.Column="1"
+                                   Text="{Binding TotalDisplay}"
+                                   FontFamily="OpenSansSemibold"
+                                   FontSize="22"
+                                   TextColor="#087443" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <Border x:Name="PaymentPanel"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Padding="16"
+                    BackgroundColor="#14213D"
+                    Stroke="#14213D"
+                    StrokeShape="RoundRectangle 8">
+                <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="14">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Checkout"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="18"
+                               TextColor="#FFFFFF" />
+                        <Label Text="Tender, split, discount, or send to kitchen."
+                               FontSize="12"
+                               TextColor="#C7D7FE" />
+                    </VerticalStackLayout>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Card"
+                                Command="{Binding SelectTenderCommand}"
+                                CommandParameter="Card"
+                                BackgroundColor="#FFFFFF"
+                                TextColor="#14213D"
+                                CornerRadius="8" />
+                        <Button Grid.Column="1"
+                                Text="Cash"
+                                Command="{Binding SelectTenderCommand}"
+                                CommandParameter="Cash"
+                                BackgroundColor="#243B64"
+                                TextColor="#FFFFFF"
+                                CornerRadius="8" />
+                    </Grid>
+
+                    <Grid x:Name="KeypadGrid"
+                          Grid.Row="2"
+                          ColumnSpacing="10"
+                          RowSpacing="10"
+                          ColumnDefinitions="*,*,*"
+                          RowDefinitions="Auto,Auto,Auto,Auto"
+                          VerticalOptions="Start">
+                        <Button Text="1" Command="{Binding KeypadCommand}" CommandParameter="1" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Column="1" Text="2" Command="{Binding KeypadCommand}" CommandParameter="2" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Column="2" Text="3" Command="{Binding KeypadCommand}" CommandParameter="3" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="1" Text="4" Command="{Binding KeypadCommand}" CommandParameter="4" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="1" Grid.Column="1" Text="5" Command="{Binding KeypadCommand}" CommandParameter="5" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="1" Grid.Column="2" Text="6" Command="{Binding KeypadCommand}" CommandParameter="6" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="2" Text="7" Command="{Binding KeypadCommand}" CommandParameter="7" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="2" Grid.Column="1" Text="8" Command="{Binding KeypadCommand}" CommandParameter="8" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="2" Grid.Column="2" Text="9" Command="{Binding KeypadCommand}" CommandParameter="9" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="3" Text="CLR" Command="{Binding KeypadCommand}" CommandParameter="CLR" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="3" Grid.Column="1" Text="0" Command="{Binding KeypadCommand}" CommandParameter="0" Style="{StaticResource PosKeypadButtonStyle}" />
+                        <Button Grid.Row="3" Grid.Column="2" Text="." Command="{Binding KeypadCommand}" CommandParameter="." Style="{StaticResource PosKeypadButtonStyle}" />
+                    </Grid>
+
+                    <VerticalStackLayout Grid.Row="3" Spacing="10">
+                        <Button Text="{Binding ChargeText}"
+                                Command="{Binding ChargeCommand}"
+                                HeightRequest="54"
+                                BackgroundColor="#12B76A"
+                                TextColor="#FFFFFF"
+                                FontFamily="OpenSansSemibold"
+                                FontSize="16"
+                                CornerRadius="8" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Button Text="Discount"
+                                    Command="{Binding DiscountCommand}"
+                                    BackgroundColor="#243B64"
+                                    TextColor="#FFFFFF"
+                                    CornerRadius="8" />
+                            <Button Grid.Column="1"
+                                    Text="Void"
+                                    Command="{Binding VoidCommand}"
+                                    BackgroundColor="#F04438"
+                                    TextColor="#FFFFFF"
+                                    CornerRadius="8" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+        </Grid>
+    </ScrollView>
+    <views:SignInView />
+    </Grid>
+</ContentPage>
