@@ -1,4 +1,4 @@
-using GroundControlApp.Data.Services;
+using GroundControlApp.Data.Interfaces;
 using GroundControlApp.Main.ViewModels;
 
 namespace GroundControlApp.Main.Views;
@@ -6,7 +6,7 @@ namespace GroundControlApp.Main.Views;
 public partial class IngredientsPage : ContentPage
 {
     private readonly BackOfficeProcessViewModel viewModel =
-        BackOfficeProcessViewModel.CreateIngredients(AppServices.GetRequiredService<IGroundControlApiClient>());
+        BackOfficeProcessViewModel.CreateIngredients(AppServices.GetRequiredService<IIngredientService>());
     private bool hasLoaded;
 
     public IngredientsPage()

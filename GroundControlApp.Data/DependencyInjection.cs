@@ -1,3 +1,4 @@
+using GroundControlApp.Data.Interfaces;
 using GroundControlApp.Data.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,11 +10,14 @@ public static class DependencyInjection
         this IServiceCollection services,
         Uri apiBaseAddress)
     {
-        services.AddSingleton<IGroundControlApiClient>(_ =>
-            new GroundControlApiClient(new HttpClient
-            {
-                BaseAddress = apiBaseAddress
-            }));
+        services.AddSingleton(_ => new HttpClient
+        {
+            BaseAddress = apiBaseAddress
+        });
+        services.AddSingleton<IMenuService, MenuService>();
+        services.AddSingleton<IIngredientService, IngredientService>();
+        services.AddSingleton<IStockService, StockService>();
+        services.AddSingleton<ITimeEntryService, TimeEntryService>();
 
         return services;
     }

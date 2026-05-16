@@ -1,4 +1,4 @@
-using GroundControlApp.Data.Services;
+using GroundControlApp.Data.Interfaces;
 using GroundControlApp.Main.ViewModels;
 
 namespace GroundControlApp.Main.Views;
@@ -6,7 +6,7 @@ namespace GroundControlApp.Main.Views;
 public partial class MenuManagementPage : ContentPage
 {
     private readonly BackOfficeProcessViewModel viewModel =
-        BackOfficeProcessViewModel.CreateMenuManagement(AppServices.GetRequiredService<IGroundControlApiClient>());
+        BackOfficeProcessViewModel.CreateMenuManagement(AppServices.GetRequiredService<IMenuService>());
     private bool hasLoaded;
 
     public MenuManagementPage()

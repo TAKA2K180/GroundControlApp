@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
-using GroundControlApp.Data.Services;
+using GroundControlApp.Data.Interfaces;
 using GroundControlApp.Main.Models;
 
 namespace GroundControlApp.Main.ViewModels;
@@ -11,7 +11,7 @@ public sealed class MainPageViewModel : ObservableObject
     private const string TestAccountEmail = "admin@groundcontrol.local";
     private const string TestAccountSecret = "1234";
 
-    private readonly IGroundControlApiClient apiClient;
+    private readonly IMenuService menuService;
     private readonly List<PosProduct> allProducts = [];
     private string searchText = string.Empty;
     private string selectedTender = "Card";
@@ -25,9 +25,9 @@ public sealed class MainPageViewModel : ObservableObject
     private bool isSignInVisible;
     private bool isSignedIn;
 
-    public MainPageViewModel(IGroundControlApiClient apiClient)
+    public MainPageViewModel(IMenuService menuService)
     {
-        this.apiClient = apiClient;
+        this.menuService = menuService;
         Categories = [];
 
         Products = [];
@@ -251,8 +251,8 @@ public sealed class MainPageViewModel : ObservableObject
     {
         try
         {
-            SyncStatus = "Loading menu catalog from API.";
-            var menus = await apiClient.GetMenusAsync(cancellationToken);
+            SyncStatus = "Loading menu catalog....";
+            var menus = await menuService.GetMenusAsync(cancellationToken);
             Products.Clear();
             Categories.Clear();
             allProducts.Clear();
@@ -289,7 +289,7 @@ public sealed class MainPageViewModel : ObservableObject
 
             SyncStatus = Products.Count == 0
                 ? "API returned no available menu items."
-                : $"Loaded {Products.Count} menu items from API.";
+                : $"Loaded {Products.Count} menu items.";
         }
         catch (Exception ex)
         {
