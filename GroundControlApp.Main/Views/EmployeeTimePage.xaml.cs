@@ -1,10 +1,12 @@
+using GroundControlApp.Data.Services;
 using GroundControlApp.Main.ViewModels;
 
 namespace GroundControlApp.Main.Views;
 
 public partial class EmployeeTimePage : ContentPage
 {
-    private readonly BackOfficeProcessViewModel viewModel = BackOfficeProcessViewModel.CreateEmployeeTime();
+    private readonly BackOfficeProcessViewModel viewModel =
+        BackOfficeProcessViewModel.CreateEmployeeTime(AppServices.GetRequiredService<IGroundControlApiClient>());
     private bool hasLoaded;
 
     public EmployeeTimePage()

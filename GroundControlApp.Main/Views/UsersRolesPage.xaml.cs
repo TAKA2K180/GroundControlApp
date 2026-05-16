@@ -1,10 +1,12 @@
+using GroundControlApp.Data.Services;
 using GroundControlApp.Main.ViewModels;
 
 namespace GroundControlApp.Main.Views;
 
 public partial class UsersRolesPage : ContentPage
 {
-    private readonly BackOfficeProcessViewModel viewModel = BackOfficeProcessViewModel.CreateUsersRoles();
+    private readonly BackOfficeProcessViewModel viewModel =
+        BackOfficeProcessViewModel.CreateUsersRoles(AppServices.GetRequiredService<IGroundControlApiClient>());
     private bool hasLoaded;
 
     public UsersRolesPage()

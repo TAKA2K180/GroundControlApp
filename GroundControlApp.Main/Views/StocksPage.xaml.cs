@@ -1,10 +1,12 @@
+using GroundControlApp.Data.Services;
 using GroundControlApp.Main.ViewModels;
 
 namespace GroundControlApp.Main.Views;
 
 public partial class StocksPage : ContentPage
 {
-    private readonly BackOfficeProcessViewModel viewModel = BackOfficeProcessViewModel.CreateStocks();
+    private readonly BackOfficeProcessViewModel viewModel =
+        BackOfficeProcessViewModel.CreateStocks(AppServices.GetRequiredService<IGroundControlApiClient>());
     private bool hasLoaded;
 
     public StocksPage()

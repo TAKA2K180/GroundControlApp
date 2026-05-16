@@ -7,6 +7,6 @@ public partial class AdminPanelPage : ContentPage
     public AdminPanelPage()
     {
         InitializeComponent();
-        BindingContext = new AdminPanelViewModel();
+        BindingContext = AppServices.GetRequiredService<AdminPanelViewModel>();
     }
 }

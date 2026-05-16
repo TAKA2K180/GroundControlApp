@@ -1,7 +1,8 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows.Input;
+using GroundControlApp.Data.Services;
 using GroundControlApp.Main.Models;
-using GroundControlApp.Main.Services;
 
 namespace GroundControlApp.Main.ViewModels;
 
@@ -10,41 +11,38 @@ public sealed class MainPageViewModel : ObservableObject
     private const string TestAccountEmail = "admin@groundcontrol.local";
     private const string TestAccountSecret = "1234";
 
-    private readonly GroundControlApiClient apiClient = new();
+    private readonly IGroundControlApiClient apiClient;
+    private readonly List<PosProduct> allProducts = [];
     private string searchText = string.Empty;
     private string selectedTender = "Card";
     private string shiftStatus = "Point of Sale";
     private string syncStatus = "Ready for API-backed inventory.";
-    private string ticketStatus = "Dine in - Table 4";
+    private string ticketStatus = "New ticket";
+    private string selectedCategory = "All";
     private string signInEmail = TestAccountEmail;
     private string signInSecret = string.Empty;
     private string signInMessage = string.Empty;
     private bool isSignInVisible;
     private bool isSignedIn;
 
-    public MainPageViewModel()
+    public MainPageViewModel(IGroundControlApiClient apiClient)
     {
-        Categories =
-        [
-            new PosCategory("All", true),
-            new PosCategory("Arabica"),
-            new PosCategory("Robusta"),
-            new PosCategory("Liberica"),
-            new PosCategory("Excelsa")
-        ];
+        this.apiClient = apiClient;
+        Categories = [];
 
         Products = [];
 
-        CartItems =
-        [
-            new CartItem("Benguet Arabica", "250g whole beans", 2, 280.00m),
-            new CartItem("Barako Liberica", "fine grind", 1, 260.00m),
-            new CartItem("Espresso Crema Blend", "500g whole beans", 1, 350.00m)
-        ];
+        CartItems = [];
 
         KeypadValues = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "CLR", "0", "."];
 
-        SelectCategoryCommand = new RelayCommand(_ => { });
+        SelectCategoryCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is PosCategory category)
+            {
+                SelectCategory(category.Name);
+            }
+        });
         AddProductCommand = new RelayCommand(parameter =>
         {
             if (parameter is PosProduct product)
@@ -60,6 +58,49 @@ public sealed class MainPageViewModel : ObservableObject
             }
         });
         KeypadCommand = new RelayCommand(_ => { });
+        IncreaseQuantityCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is CartItem item)
+            {
+                item.Quantity++;
+                RefreshTotals();
+            }
+        });
+        DecreaseQuantityCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is CartItem item)
+            {
+                if (item.Quantity <= 1)
+                {
+                    RemoveCartItem(item);
+                    return;
+                }
+
+                item.Quantity--;
+                RefreshTotals();
+            }
+        });
+        RemoveCartItemCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is CartItem item)
+            {
+                RemoveCartItem(item);
+            }
+        });
+        AddCartItemAddOnCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is CartItem item)
+            {
+                AddCartItemAddOn(item);
+            }
+        });
+        RemoveCartItemAddOnCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is CartAddOn addOn)
+            {
+                RemoveCartItemAddOn(addOn);
+            }
+        });
         ShowSignInCommand = new RelayCommand(() => IsSignInVisible = true);
         HideSignInCommand = new RelayCommand(HideSignIn);
         SignInCommand = new RelayCommand(SignIn);
@@ -87,6 +128,16 @@ public sealed class MainPageViewModel : ObservableObject
     public ICommand SelectTenderCommand { get; }
 
     public ICommand KeypadCommand { get; }
+
+    public ICommand IncreaseQuantityCommand { get; }
+
+    public ICommand DecreaseQuantityCommand { get; }
+
+    public ICommand RemoveCartItemCommand { get; }
+
+    public ICommand AddCartItemAddOnCommand { get; }
+
+    public ICommand RemoveCartItemAddOnCommand { get; }
 
     public ICommand ShowSignInCommand { get; }
 
@@ -186,15 +237,11 @@ public sealed class MainPageViewModel : ObservableObject
         private set => SetProperty(ref ticketStatus, value);
     }
 
-    public decimal Subtotal => CartItems.Sum(item => item.Total);
+    public decimal Subtotal => CartItems.Sum(CalculateCartItemTotal);
 
-    public decimal Tax => decimal.Round(Subtotal * 0.0825m, 2);
-
-    public decimal Total => Subtotal + Tax;
+    public decimal Total => Subtotal;
 
     public string SubtotalDisplay => $"PHP {Subtotal:N2}";
-
-    public string TaxDisplay => $"PHP {Tax:N2}";
 
     public string TotalDisplay => $"PHP {Total:N2}";
 
@@ -207,11 +254,38 @@ public sealed class MainPageViewModel : ObservableObject
             SyncStatus = "Loading menu catalog from API.";
             var menus = await apiClient.GetMenusAsync(cancellationToken);
             Products.Clear();
+            Categories.Clear();
+            allProducts.Clear();
 
-            foreach (var menu in menus.Where(menu => menu.IsAvailable))
+            var availableMenus = menus
+                .Where(menu => menu.IsAvailable)
+                .ToArray();
+
+            if (availableMenus.Length > 0)
             {
-                Products.Add(new PosProduct(menu.Id, menu.Name, GetMenuCategoryName(menu.Category), menu.Price));
+                if (selectedCategory != "All" &&
+                    availableMenus.All(menu => GetMenuCategoryName(menu.Category) != selectedCategory))
+                {
+                    selectedCategory = "All";
+                }
+
+                Categories.Add(new PosCategory("All", selectedCategory == "All"));
             }
+
+            foreach (var categoryName in availableMenus
+                .Select(menu => GetMenuCategoryName(menu.Category))
+                .Distinct()
+                .OrderBy(category => category))
+            {
+                Categories.Add(new PosCategory(categoryName, categoryName == selectedCategory));
+            }
+
+            foreach (var menu in availableMenus)
+            {
+                allProducts.Add(new PosProduct(menu.Id, menu.Name, GetMenuCategoryName(menu.Category), menu.Price));
+            }
+
+            ApplyCategoryFilter();
 
             SyncStatus = Products.Count == 0
                 ? "API returned no available menu items."
@@ -225,14 +299,136 @@ public sealed class MainPageViewModel : ObservableObject
 
     private void AddProduct(PosProduct product)
     {
-        CartItems.Add(new CartItem(product.Name, string.Empty, 1, Math.Max(product.Price, 0)));
+        var existingItem = CartItems.FirstOrDefault(item => item.Name == product.Name && item.UnitPrice == product.Price);
+        if (existingItem is not null)
+        {
+            existingItem.Quantity++;
+        }
+        else
+        {
+            var item = new CartItem(product.Name, string.Empty, 1, Math.Max(product.Price, 0));
+            item.PropertyChanged += OnCartItemPropertyChanged;
+            item.TotalChanged += OnCartItemTotalChanged;
+            CartItems.Add(item);
+        }
+
+        TicketStatus = $"{CartItems.Sum(item => item.Quantity)} item(s) in ticket";
+        RefreshTotals();
+    }
+
+    private void SelectCategory(string categoryName)
+    {
+        selectedCategory = categoryName;
+        Categories.Clear();
+
+        var categoryNames = allProducts
+            .Select(product => product.Category)
+            .Distinct()
+            .OrderBy(category => category)
+            .ToArray();
+
+        if (categoryNames.Length > 0)
+        {
+            Categories.Add(new PosCategory("All", selectedCategory == "All"));
+        }
+
+        foreach (var category in categoryNames)
+        {
+            Categories.Add(new PosCategory(category, category == selectedCategory));
+        }
+
+        ApplyCategoryFilter();
+    }
+
+    private void ApplyCategoryFilter()
+    {
+        Products.Clear();
+
+        var filteredProducts = selectedCategory == "All"
+            ? allProducts
+            : allProducts.Where(product => product.Category == selectedCategory);
+
+        foreach (var product in filteredProducts)
+        {
+            Products.Add(product);
+        }
+    }
+
+    private void RemoveCartItem(CartItem item)
+    {
+        item.PropertyChanged -= OnCartItemPropertyChanged;
+        item.TotalChanged -= OnCartItemTotalChanged;
+        CartItems.Remove(item);
+        TicketStatus = CartItems.Count == 0
+            ? "New ticket"
+            : $"{CartItems.Sum(cartItem => cartItem.Quantity)} item(s) in ticket";
+        RefreshTotals();
+    }
+
+    private void RefreshTotals()
+    {
         OnPropertyChanged(nameof(Subtotal));
-        OnPropertyChanged(nameof(Tax));
         OnPropertyChanged(nameof(Total));
         OnPropertyChanged(nameof(SubtotalDisplay));
-        OnPropertyChanged(nameof(TaxDisplay));
         OnPropertyChanged(nameof(TotalDisplay));
         OnPropertyChanged(nameof(ChargeText));
+    }
+
+    private void OnCartItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(CartItem.Total) or nameof(CartItem.Quantity) or nameof(CartItem.AddOnTotal))
+        {
+            RefreshTotals();
+        }
+    }
+
+    private void OnCartItemTotalChanged(object? sender, EventArgs e)
+    {
+        RefreshTotals();
+    }
+
+    private void AddCartItemAddOn(CartItem item)
+    {
+        if (string.IsNullOrWhiteSpace(item.AddOnNameInput))
+        {
+            return;
+        }
+
+        if (!decimal.TryParse(item.AddOnPriceInput, out var addOnPrice) || addOnPrice < 0)
+        {
+            return;
+        }
+
+        item.AddAddOn(item.AddOnNameInput.Trim(), addOnPrice);
+        RefreshCartItem(item);
+        RefreshTotals();
+    }
+
+    private void RemoveCartItemAddOn(CartAddOn addOn)
+    {
+        var item = CartItems.FirstOrDefault(cartItem => cartItem.AddOns.Contains(addOn));
+        if (item is null)
+        {
+            return;
+        }
+
+        item.RemoveAddOn(addOn);
+        RefreshCartItem(item);
+        RefreshTotals();
+    }
+
+    private void RefreshCartItem(CartItem item)
+    {
+        var index = CartItems.IndexOf(item);
+        if (index >= 0)
+        {
+            CartItems[index] = item;
+        }
+    }
+
+    private static decimal CalculateCartItemTotal(CartItem item)
+    {
+        return item.Quantity * (item.UnitPrice + item.AddOns.Sum(addOn => addOn.Price));
     }
 
     private static string GetMenuCategoryName(int category)
@@ -270,4 +466,5 @@ public sealed class MainPageViewModel : ObservableObject
         SignInMessage = string.Empty;
         IsSignInVisible = false;
     }
+
 }

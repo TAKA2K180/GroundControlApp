@@ -1,10 +1,12 @@
+using GroundControlApp.Data.Services;
 using GroundControlApp.Main.ViewModels;
 
 namespace GroundControlApp.Main.Views;
 
 public partial class PayrollPage : ContentPage
 {
-    private readonly BackOfficeProcessViewModel viewModel = BackOfficeProcessViewModel.CreatePayroll();
+    private readonly BackOfficeProcessViewModel viewModel =
+        BackOfficeProcessViewModel.CreatePayroll(AppServices.GetRequiredService<IGroundControlApiClient>());
     private bool hasLoaded;
 
     public PayrollPage()

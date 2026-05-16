@@ -1,10 +1,12 @@
+using GroundControlApp.Data.Services;
 using GroundControlApp.Main.ViewModels;
 
 namespace GroundControlApp.Main.Views;
 
 public partial class IngredientsPage : ContentPage
 {
-    private readonly BackOfficeProcessViewModel viewModel = BackOfficeProcessViewModel.CreateIngredients();
+    private readonly BackOfficeProcessViewModel viewModel =
+        BackOfficeProcessViewModel.CreateIngredients(AppServices.GetRequiredService<IGroundControlApiClient>());
     private bool hasLoaded;
 
     public IngredientsPage()

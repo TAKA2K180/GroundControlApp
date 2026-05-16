@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace GroundControlApp.Main.Services;
+namespace GroundControlApp.Data.Services;
 
-public sealed class GroundControlApiClient
+public sealed class GroundControlApiClient : IGroundControlApiClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -11,11 +11,6 @@ public sealed class GroundControlApiClient
     };
 
     private readonly HttpClient httpClient;
-
-    public GroundControlApiClient()
-        : this(new HttpClient { BaseAddress = new Uri(GetDefaultBaseAddress()) })
-    {
-    }
 
     public GroundControlApiClient(HttpClient httpClient)
     {
@@ -49,13 +44,6 @@ public sealed class GroundControlApiClient
 
         return await response.Content.ReadFromJsonAsync<IReadOnlyCollection<T>>(JsonOptions, cancellationToken)
             ?? [];
-    }
-
-    private static string GetDefaultBaseAddress()
-    {
-        return DeviceInfo.Platform == DevicePlatform.Android
-            ? "http://10.0.2.2:5032/"
-            : "http://localhost:5032/";
     }
 }
 

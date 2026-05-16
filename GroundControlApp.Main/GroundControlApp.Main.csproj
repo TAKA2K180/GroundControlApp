@@ -71,7 +71,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Views\" />
+	  <ProjectReference Include="..\GroundControlApp.Data\GroundControlApp.Data.csproj" />
 	</ItemGroup>
 
 </Project>

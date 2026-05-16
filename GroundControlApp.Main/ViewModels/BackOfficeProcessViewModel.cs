@@ -1,13 +1,13 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using GroundControlApp.Data.Services;
 using GroundControlApp.Main.Models;
-using GroundControlApp.Main.Services;
 
 namespace GroundControlApp.Main.ViewModels;
 
 public sealed class BackOfficeProcessViewModel : ObservableObject
 {
-    private readonly GroundControlApiClient apiClient = new();
+    private readonly IGroundControlApiClient apiClient;
     private readonly string processKey;
     private string primaryMetric;
     private string secondaryMetric;
@@ -20,6 +20,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
         string secondaryMetric,
         string tertiaryMetric,
         string processKey,
+        IGroundControlApiClient apiClient,
         IEnumerable<AdminTaskItem> tasks,
         IEnumerable<AdminRecordItem> records)
     {
@@ -29,6 +30,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
         this.secondaryMetric = secondaryMetric;
         this.tertiaryMetric = tertiaryMetric;
         this.processKey = processKey;
+        this.apiClient = apiClient;
         Tasks = new ObservableCollection<AdminTaskItem>(tasks);
         Records = new ObservableCollection<AdminRecordItem>(records);
         BackCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync(".."));
@@ -171,7 +173,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
         TertiaryMetric = $"{timeEntries.Count(entry => entry.IsPaid)} paid";
     }
 
-    public static BackOfficeProcessViewModel CreateMenuManagement()
+    public static BackOfficeProcessViewModel CreateMenuManagement(IGroundControlApiClient apiClient)
     {
         return new(
             "Menu Management",
@@ -180,6 +182,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             "7 categories",
             "2 unavailable",
             "menus",
+            apiClient,
             [
                 new AdminTaskItem("Add menu item", "Create a coffee, pastry, food, add-on, or merchandise item.", "New Item"),
                 new AdminTaskItem("Update recipe", "Attach menu ingredients so inventory can be deducted when sales close.", "Recipe"),
@@ -192,7 +195,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             ]);
     }
 
-    public static BackOfficeProcessViewModel CreateIngredients()
+    public static BackOfficeProcessViewModel CreateIngredients(IGroundControlApiClient apiClient)
     {
         return new(
             "Ingredients",
@@ -201,6 +204,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             "3 low stock",
             "PHP 42 avg cost",
             "ingredients",
+            apiClient,
             [
                 new AdminTaskItem("Create ingredient", "Add beans, milk, syrups, cups, lids, pastry inputs, and other consumables.", "New Ingredient"),
                 new AdminTaskItem("Set reorder level", "Tune low-stock triggers per unit of measure.", "Reorder"),
@@ -213,7 +217,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             ]);
     }
 
-    public static BackOfficeProcessViewModel CreateStocks()
+    public static BackOfficeProcessViewModel CreateStocks(IGroundControlApiClient apiClient)
     {
         return new(
             "Stocks",
@@ -222,6 +226,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             "4 suppliers",
             "3 adjustments",
             "stocks",
+            apiClient,
             [
                 new AdminTaskItem("Receive stock", "Record batch number, quantity, unit cost, supplier, and expiration date.", "Receive"),
                 new AdminTaskItem("Adjust inventory", "Create stock movements for waste, count corrections, and transfers.", "Adjust"),
@@ -234,7 +239,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             ]);
     }
 
-    public static BackOfficeProcessViewModel CreateOrders()
+    public static BackOfficeProcessViewModel CreateOrders(IGroundControlApiClient apiClient)
     {
         return new(
             "Orders",
@@ -243,6 +248,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             "2 due today",
             "PHP 7,840.00",
             "orders",
+            apiClient,
             [
                 new AdminTaskItem("Review drafts", "Complete pending order headers before fulfillment.", "Drafts"),
                 new AdminTaskItem("Update payment", "Record payment idempotency, amount paid, and order status.", "Payment"),
@@ -255,7 +261,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             ]);
     }
 
-    public static BackOfficeProcessViewModel CreateSales()
+    public static BackOfficeProcessViewModel CreateSales(IGroundControlApiClient apiClient)
     {
         return new(
             "Sales",
@@ -264,6 +270,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             "42 receipts",
             "PHP 438 avg",
             "sales",
+            apiClient,
             [
                 new AdminTaskItem("Sales report", "Review completed, voided, and refunded sale status totals.", "Report"),
                 new AdminTaskItem("Payment review", "Check card, cash, and split payment records.", "Payments"),
@@ -276,7 +283,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             ]);
     }
 
-    public static BackOfficeProcessViewModel CreateEmployeeTime()
+    public static BackOfficeProcessViewModel CreateEmployeeTime(IGroundControlApiClient apiClient)
     {
         return new(
             "Employee Time",
@@ -285,6 +292,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             "28.5 hours",
             "1 open break",
             "employee-time",
+            apiClient,
             [
                 new AdminTaskItem("Open shifts", "Review staff who are currently clocked in.", "Open"),
                 new AdminTaskItem("Edit time entry", "Correct clock-out time, break minutes, notes, or hourly rate.", "Edit"),
@@ -297,7 +305,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             ]);
     }
 
-    public static BackOfficeProcessViewModel CreatePayroll()
+    public static BackOfficeProcessViewModel CreatePayroll(IGroundControlApiClient apiClient)
     {
         return new(
             "Payroll",
@@ -306,6 +314,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             "128.5 regular",
             "6 overtime",
             "payroll",
+            apiClient,
             [
                 new AdminTaskItem("Create payroll run", "Select period start/end and collect closed time entries.", "New Run"),
                 new AdminTaskItem("Review gross pay", "Validate regular hours, overtime, hourly rates, and gross pay.", "Review"),
@@ -318,7 +327,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             ]);
     }
 
-    public static BackOfficeProcessViewModel CreateUsersRoles()
+    public static BackOfficeProcessViewModel CreateUsersRoles(IGroundControlApiClient apiClient)
     {
         return new(
             "Users and Roles",
@@ -327,6 +336,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             "4 roles",
             "1 inactive",
             "users",
+            apiClient,
             [
                 new AdminTaskItem("Create user", "Add employee profile, email, role, hourly rate, and active status.", "New User"),
                 new AdminTaskItem("Set access", "Assign Admin, Manager, Cashier, or Barista permissions.", "Roles"),

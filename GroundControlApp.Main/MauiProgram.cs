@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+using GroundControlApp.Data;
+using Microsoft.Extensions.Logging;
 
 namespace GroundControlApp.Main
 {
@@ -15,11 +16,25 @@ namespace GroundControlApp.Main
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            builder.Services.AddGroundControlAppData(GetApiBaseAddress());
+            builder.Services.AddTransient<ViewModels.MainPageViewModel>();
+            builder.Services.AddTransient<ViewModels.AdminPanelViewModel>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+            AppServices.Services = app.Services;
+
+            return app;
+        }
+
+        private static Uri GetApiBaseAddress()
+        {
+            return DeviceInfo.Platform == DevicePlatform.Android
+                ? new Uri("http://10.0.2.2:5032/")
+                : new Uri("http://localhost:5032/");
         }
     }
 }

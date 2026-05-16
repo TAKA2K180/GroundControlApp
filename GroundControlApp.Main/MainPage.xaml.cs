@@ -2,12 +2,18 @@ namespace GroundControlApp.Main
 {
     public partial class MainPage : ContentPage
     {
-        private readonly ViewModels.MainPageViewModel viewModel = new();
+        private readonly ViewModels.MainPageViewModel viewModel;
         private bool hasLoaded;
 
         public MainPage()
+            : this(AppServices.GetRequiredService<ViewModels.MainPageViewModel>())
+        {
+        }
+
+        public MainPage(ViewModels.MainPageViewModel viewModel)
         {
             InitializeComponent();
+            this.viewModel = viewModel;
             BindingContext = viewModel;
             SizeChanged += OnSizeChanged;
         }
@@ -98,7 +104,7 @@ namespace GroundControlApp.Main
             HeaderActions.SetValue(Grid.ColumnProperty, 2);
 
             ProductItemsLayout.Span = 3;
-            ApplyPanelHeights(width: Width, height: Height, productRatio: 0.58, cartRatio: 0.48);
+            ApplyPanelHeights(width: Width, height: Height, productRatio: 0.64, cartRatio: 0.48);
         }
 
         private void ApplyCompactLandscapeLayout(double width)
@@ -139,7 +145,7 @@ namespace GroundControlApp.Main
             HeaderActions.SetValue(Grid.ColumnProperty, 2);
 
             ProductItemsLayout.Span = width < 920 ? 2 : 3;
-            ApplyPanelHeights(width, height, productRatio: 0.48, cartRatio: 0.46);
+            ApplyPanelHeights(width, height, productRatio: 0.60, cartRatio: 0.46);
         }
 
         private void ApplyTabletLayout()
@@ -179,7 +185,7 @@ namespace GroundControlApp.Main
             HeaderActions.SetValue(Grid.ColumnProperty, 1);
 
             ProductItemsLayout.Span = 2;
-            ApplyPanelHeights(width: Width, height: Height, productRatio: 0.48, cartRatio: 0.44);
+            ApplyPanelHeights(width: Width, height: Height, productRatio: 0.58, cartRatio: 0.44);
         }
 
         private void ApplyPhoneLayout()
@@ -232,14 +238,14 @@ namespace GroundControlApp.Main
             var headerAllowance = width < 1100 ? 190 : 110;
             var usableHeight = Math.Max(360, height - headerAllowance);
 
-            ProductList.HeightRequest = Math.Clamp(usableHeight * productRatio, 240, 620);
-            CartList.HeightRequest = Math.Clamp(usableHeight * cartRatio, 170, 480);
+            ProductList.HeightRequest = Math.Clamp(usableHeight * productRatio, 342, 620);
+            CartList.HeightRequest = -1;
         }
 
         private void ApplyPhonePanelHeights()
         {
-            ProductList.HeightRequest = Math.Max(360, Math.Min(Height * 0.52, 520));
-            CartList.HeightRequest = Math.Max(180, Math.Min(Height * 0.32, 320));
+            ProductList.HeightRequest = Math.Max(342, Math.Min(Height * 0.56, 520));
+            CartList.HeightRequest = -1;
         }
     }
 }
