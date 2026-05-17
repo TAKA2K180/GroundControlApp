@@ -5,4 +5,6 @@ namespace GroundControlApp.Data.Interfaces;
 public interface ITimeEntryService
 {
     Task<IReadOnlyCollection<TimeEntryDto>> GetTimeEntriesAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<PayrollRunDto>> GetPayrollRunsAsync(CancellationToken cancellationToken = default);
 }

@@ -4,11 +4,16 @@ namespace GroundControlApp.Main.ViewModels;
 
 public sealed class AsyncRelayCommand : ICommand
 {
-    private readonly Func<Task> execute;
+    private readonly Func<object?, Task> execute;
     private readonly Func<bool>? canExecute;
     private bool isRunning;
 
     public AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecute = null)
+        : this(_ => execute(), canExecute)
+    {
+    }
+
+    public AsyncRelayCommand(Func<object?, Task> execute, Func<bool>? canExecute = null)
     {
         this.execute = execute;
         this.canExecute = canExecute;
@@ -33,7 +38,7 @@ public sealed class AsyncRelayCommand : ICommand
 
         try
         {
-            await execute();
+            await execute(parameter);
         }
         finally
         {

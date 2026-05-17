@@ -14,4 +14,19 @@ public sealed class IngredientService : GroundControlApiServiceBase, IIngredient
     {
         return await GetAsync<IngredientDto>("api/v1/ingredients", cancellationToken);
     }
+
+    public Task<IngredientDto> CreateIngredientAsync(
+        SaveIngredientDto ingredient,
+        CancellationToken cancellationToken = default)
+    {
+        return PostAsync<SaveIngredientDto, IngredientDto>("api/v1/ingredients", ingredient, null, cancellationToken);
+    }
+
+    public Task<IngredientDto> UpdateIngredientAsync(
+        Guid id,
+        SaveIngredientDto ingredient,
+        CancellationToken cancellationToken = default)
+    {
+        return PutAsync<SaveIngredientDto, IngredientDto>($"api/v1/ingredients/{id}", ingredient, cancellationToken);
+    }
 }

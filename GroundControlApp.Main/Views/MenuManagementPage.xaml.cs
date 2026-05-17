@@ -5,9 +5,10 @@ namespace GroundControlApp.Main.Views;
 
 public partial class MenuManagementPage : ContentPage
 {
-    private readonly BackOfficeProcessViewModel viewModel =
-        BackOfficeProcessViewModel.CreateMenuManagement(AppServices.GetRequiredService<IMenuService>());
-    private bool hasLoaded;
+    private readonly MenuManagementViewModel viewModel =
+        new(
+            AppServices.GetRequiredService<IMenuService>(),
+            AppServices.GetRequiredService<IIngredientService>());
 
     public MenuManagementPage()
     {
@@ -18,8 +19,6 @@ public partial class MenuManagementPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (hasLoaded) return;
-        hasLoaded = true;
         await viewModel.LoadAsync();
     }
 }

@@ -1,8 +1,237 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:views="clr-namespace:GroundControlApp.Main.Views"
              x:Class="GroundControlApp.Main.Views.IngredientsPage"
+             x:Name="IngredientsPageRoot"
              BackgroundColor="#F4F6F8">
-    <views:BackOfficeProcessView />
+
+    <Grid Padding="18"
+          RowDefinitions="Auto,Auto,*"
+          RowSpacing="14">
+        <Border Padding="16"
+                BackgroundColor="#14213D"
+                Stroke="#14213D"
+                StrokeShape="RoundRectangle 8">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                <VerticalStackLayout Spacing="3">
+                    <Label Text="Ingredients"
+                           FontFamily="OpenSansSemibold"
+                           FontSize="24"
+                           TextColor="#FFFFFF" />
+                    <Label Text="{Binding PageStatus}"
+                           FontSize="12"
+                           TextColor="#C7D7FE" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1"
+                        Text="Refresh"
+                        Command="{Binding RefreshCommand}"
+                        BackgroundColor="#243B64"
+                        TextColor="#FFFFFF"
+                        CornerRadius="8" />
+                <Button Grid.Column="2"
+                        Text="Back"
+                        Command="{Binding BackCommand}"
+                        BackgroundColor="#FFFFFF"
+                        TextColor="#14213D"
+                        CornerRadius="8" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*,*"
+              ColumnSpacing="10">
+            <Button Text="Add ingredient"
+                    Command="{Binding AddIngredientCommand}"
+                    BackgroundColor="#EAF8F0"
+                    TextColor="#087443"
+                    CornerRadius="8" />
+            <Button Grid.Column="1"
+                    Text="Set reorder level"
+                    Command="{Binding SetReorderCommand}"
+                    BackgroundColor="#EEF4FF"
+                    TextColor="#175CD3"
+                    CornerRadius="8" />
+            <Button Grid.Column="2"
+                    Text="Review cost"
+                    Command="{Binding ReviewCostCommand}"
+                    BackgroundColor="#FFF6E5"
+                    TextColor="#B54708"
+                    CornerRadius="8" />
+        </Grid>
+
+        <Grid Grid.Row="2"
+              ColumnDefinitions="1.2*,0.9*"
+              ColumnSpacing="14">
+            <Border Padding="14"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#DDE3EA"
+                    StrokeShape="RoundRectangle 8">
+                <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                    <Label Text="Ingredient List"
+                           FontFamily="OpenSansSemibold"
+                           FontSize="18"
+                           TextColor="#14213D" />
+
+                    <CollectionView Grid.Row="1"
+                                    ItemsSource="{Binding IngredientItems}"
+                                    SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12"
+                                        BackgroundColor="#F8FAFC"
+                                        Stroke="#DDE3EA"
+                                        StrokeShape="RoundRectangle 8"
+                                        MinimumHeightRequest="88">
+                                    <Grid ColumnDefinitions="*,Auto"
+                                          RowDefinitions="Auto,Auto,Auto"
+                                          ColumnSpacing="12"
+                                          RowSpacing="5">
+                                        <Label Text="{Binding Name}"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="17"
+                                               TextColor="#14213D" />
+                                        <Label Grid.Column="1"
+                                               Text="{Binding QuantityDisplay}"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="16"
+                                               TextColor="#087443" />
+                                        <Label Grid.Row="1"
+                                               Text="{Binding UnitCostDisplay}"
+                                               FontSize="13"
+                                               TextColor="#344054" />
+                                        <HorizontalStackLayout Grid.Row="2"
+                                                               Spacing="12">
+                                            <Label Text="{Binding UnitOfMeasure}"
+                                                   FontSize="13"
+                                                   TextColor="#667085" />
+                                            <Label Text="{Binding ReorderDisplay}"
+                                                   FontSize="13"
+                                                   TextColor="#667085" />
+                                            <Label Text="{Binding TargetDisplay}"
+                                                   FontSize="13"
+                                                   TextColor="#667085" />
+                                            <Label Text="{Binding StatusDisplay}"
+                                                   FontSize="13"
+                                                   TextColor="{Binding StatusColor}" />
+                                        </HorizontalStackLayout>
+                                        <Button Grid.Row="1"
+                                                Grid.RowSpan="2"
+                                                Grid.Column="1"
+                                                Text="Edit"
+                                                Command="{Binding BindingContext.EditIngredientCommand, Source={x:Reference IngredientsPageRoot}}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#EEF4FF"
+                                                TextColor="#175CD3"
+                                                CornerRadius="8"
+                                                VerticalOptions="End" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Padding="14"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#DDE3EA"
+                    StrokeShape="RoundRectangle 8">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+                    <ScrollView Grid.Row="0">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="{Binding EditorTitle}"
+                                   FontFamily="OpenSansSemibold"
+                                   FontSize="18"
+                                   TextColor="#14213D" />
+
+                            <Grid ColumnDefinitions="*,*"
+                                  RowDefinitions="Auto,Auto,Auto,Auto"
+                                  ColumnSpacing="10"
+                                  RowSpacing="10">
+                                <VerticalStackLayout Grid.ColumnSpan="2" Spacing="4">
+                                    <Label Text="Ingredient name" FontSize="12" TextColor="#667085" />
+                                    <Entry Text="{Binding Name}"
+                                           Placeholder="Ingredient name"
+                                           BackgroundColor="#F8FAFC"
+                                           TextColor="#111827" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="1" Spacing="4">
+                                    <Label Text="Unit" FontSize="12" TextColor="#667085" />
+                                    <Entry Text="{Binding UnitOfMeasure}"
+                                           Placeholder="g, ml, pc"
+                                           BackgroundColor="#F8FAFC"
+                                           TextColor="#111827" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4">
+                                    <Label Text="Current quantity" FontSize="12" TextColor="#667085" />
+                                    <Entry Text="{Binding CurrentQuantityText}"
+                                           Keyboard="Numeric"
+                                           Placeholder="0"
+                                           BackgroundColor="#F8FAFC"
+                                           TextColor="#111827" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="2" Spacing="4">
+                                    <Label Text="Reorder level" FontSize="12" TextColor="#667085" />
+                                    <Entry Text="{Binding ReorderLevelText}"
+                                           Keyboard="Numeric"
+                                           Placeholder="0"
+                                           BackgroundColor="#F8FAFC"
+                                           TextColor="#111827" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="4">
+                                    <Label Text="Target level" FontSize="12" TextColor="#667085" />
+                                    <Entry Text="{Binding TargetLevelText}"
+                                           Keyboard="Numeric"
+                                           Placeholder="0"
+                                           BackgroundColor="#F8FAFC"
+                                           TextColor="#111827" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="3" Grid.ColumnSpan="2" Spacing="4">
+                                    <Label Text="Unit cost" FontSize="12" TextColor="#667085" />
+                                    <Entry Text="{Binding UnitCostText}"
+                                           Keyboard="Numeric"
+                                           Placeholder="0"
+                                           BackgroundColor="#F8FAFC"
+                                           TextColor="#111827" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="8">
+                                <Switch IsToggled="{Binding IsActive}"
+                                        VerticalOptions="Center" />
+                                <Label Grid.Column="1"
+                                       Text="Active ingredient"
+                                       FontSize="13"
+                                       TextColor="#344054"
+                                       VerticalTextAlignment="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <VerticalStackLayout Grid.Row="1"
+                                         Spacing="10"
+                                         VerticalOptions="Center">
+                        <Label Text="Use this editor to keep ingredient master data current. Stock receiving and order fulfillment will update quantities through inventory workflows."
+                               FontSize="13"
+                               TextColor="#667085"
+                               LineBreakMode="WordWrap" />
+                    </VerticalStackLayout>
+
+                    <Button Grid.Row="2"
+                            Text="Save ingredient"
+                            Command="{Binding SaveCommand}"
+                            HeightRequest="50"
+                            BackgroundColor="#14213D"
+                            TextColor="#FFFFFF"
+                            FontFamily="OpenSansSemibold"
+                            CornerRadius="8" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
 </ContentPage>

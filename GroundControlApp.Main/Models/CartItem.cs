@@ -12,8 +12,9 @@ public sealed class CartItem : ObservableObject
 
     public event EventHandler? TotalChanged;
 
-    public CartItem(string name, string note, int quantity, decimal unitPrice)
+    public CartItem(Guid? menuId, string name, string note, int quantity, decimal unitPrice)
     {
+        MenuId = menuId;
         Name = name;
         Note = note;
         this.quantity = quantity;
@@ -21,6 +22,8 @@ public sealed class CartItem : ObservableObject
         AddOns.CollectionChanged += OnAddOnsChanged;
         RecalculateTotals();
     }
+
+    public Guid? MenuId { get; }
 
     public string Name { get; }
 

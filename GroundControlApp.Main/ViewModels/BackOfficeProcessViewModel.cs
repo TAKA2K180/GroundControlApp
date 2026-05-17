@@ -11,6 +11,9 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
     private readonly IIngredientService? ingredientService;
     private readonly IStockService? stockService;
     private readonly ITimeEntryService? timeEntryService;
+    private readonly IOrderService? orderService;
+    private readonly ISaleService? saleService;
+    private readonly IUserService? userService;
     private readonly string processKey;
     private string primaryMetric;
     private string secondaryMetric;
@@ -28,7 +31,10 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
         IMenuService? menuService = null,
         IIngredientService? ingredientService = null,
         IStockService? stockService = null,
-        ITimeEntryService? timeEntryService = null)
+        ITimeEntryService? timeEntryService = null,
+        IOrderService? orderService = null,
+        ISaleService? saleService = null,
+        IUserService? userService = null)
     {
         Title = title;
         Subtitle = subtitle;
@@ -40,6 +46,9 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
         this.ingredientService = ingredientService;
         this.stockService = stockService;
         this.timeEntryService = timeEntryService;
+        this.orderService = orderService;
+        this.saleService = saleService;
+        this.userService = userService;
         Tasks = new ObservableCollection<AdminTaskItem>(tasks);
         Records = new ObservableCollection<AdminRecordItem>(records);
         BackCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync(".."));
@@ -90,6 +99,18 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
                     break;
                 case "employee-time":
                     await LoadTimeEntriesAsync(cancellationToken);
+                    break;
+                case "orders":
+                    await LoadOrdersAsync(cancellationToken);
+                    break;
+                case "sales":
+                    await LoadSalesAsync(cancellationToken);
+                    break;
+                case "payroll":
+                    await LoadPayrollRunsAsync(cancellationToken);
+                    break;
+                case "users":
+                    await LoadUsersAsync(cancellationToken);
                     break;
                 default:
                     Records.Clear();
@@ -186,6 +207,90 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
         TertiaryMetric = $"{timeEntries.Count(entry => entry.IsPaid)} paid";
     }
 
+    private async Task LoadOrdersAsync(CancellationToken cancellationToken)
+    {
+        var orders = await (orderService ?? throw new InvalidOperationException("Order service is not configured."))
+            .GetOrdersAsync(cancellationToken);
+        Records.Clear();
+
+        foreach (var order in orders)
+        {
+            Records.Add(new AdminRecordItem(
+                order.InvoiceNumber,
+                $"{order.CustomerName ?? "Walk-in customer"} - {order.OrderedAtUtc:g}",
+                $"PHP {order.GrandTotal:N2}",
+                GetOrderStatusName(order.Status)));
+        }
+
+        PrimaryMetric = $"{orders.Count(order => order.Status is 1 or 2 or 3)} open";
+        SecondaryMetric = $"{orders.Count(order => order.InventoryDeductedAtUtc is null)} pending stock";
+        TertiaryMetric = $"PHP {orders.Sum(order => order.GrandTotal):N2}";
+    }
+
+    private async Task LoadSalesAsync(CancellationToken cancellationToken)
+    {
+        var sales = await (saleService ?? throw new InvalidOperationException("Sale service is not configured."))
+            .GetSalesAsync(cancellationToken);
+        Records.Clear();
+
+        foreach (var sale in sales)
+        {
+            var paymentMethods = sale.PaymentMethods.Count == 0
+                ? "No payment"
+                : string.Join(", ", sale.PaymentMethods);
+
+            Records.Add(new AdminRecordItem(
+                sale.ReceiptNumber,
+                $"{sale.CashierName ?? "Cashier"} - {paymentMethods}",
+                $"PHP {sale.GrandTotal:N2}",
+                GetSaleStatusName(sale.Status)));
+        }
+
+        PrimaryMetric = $"PHP {sales.Sum(sale => sale.GrandTotal):N2}";
+        SecondaryMetric = $"{sales.Count} receipts";
+        TertiaryMetric = $"PHP {(sales.Count == 0 ? 0 : sales.Average(sale => sale.GrandTotal)):N2} avg";
+    }
+
+    private async Task LoadPayrollRunsAsync(CancellationToken cancellationToken)
+    {
+        var payrollRuns = await (timeEntryService ?? throw new InvalidOperationException("Time entry service is not configured."))
+            .GetPayrollRunsAsync(cancellationToken);
+        Records.Clear();
+
+        foreach (var payrollRun in payrollRuns)
+        {
+            Records.Add(new AdminRecordItem(
+                $"{payrollRun.PeriodStartUtc:MMM d} - {payrollRun.PeriodEndUtc:MMM d}",
+                $"{payrollRun.Items.Count} employees - processed {payrollRun.ProcessedAtUtc:g}",
+                $"PHP {payrollRun.TotalGrossPay:N2}",
+                GetPayrollStatusName(payrollRun.Status)));
+        }
+
+        PrimaryMetric = $"{payrollRuns.Count} runs";
+        SecondaryMetric = $"{payrollRuns.Sum(run => run.TotalRegularHours):N2} regular";
+        TertiaryMetric = $"PHP {payrollRuns.Sum(run => run.TotalGrossPay):N2}";
+    }
+
+    private async Task LoadUsersAsync(CancellationToken cancellationToken)
+    {
+        var users = await (userService ?? throw new InvalidOperationException("User service is not configured."))
+            .GetUsersAsync(cancellationToken);
+        Records.Clear();
+
+        foreach (var user in users)
+        {
+            Records.Add(new AdminRecordItem(
+                $"{user.FirstName} {user.LastName}",
+                $"{user.EmployeeNumber} - {user.Email} - {GetUserRoleName(user.Role)}",
+                $"PHP {user.HourlyRate:N2}/hr",
+                user.IsActive ? "Active" : "Inactive"));
+        }
+
+        PrimaryMetric = $"{users.Count} users";
+        SecondaryMetric = $"{users.Select(user => user.Role).Distinct().Count()} roles";
+        TertiaryMetric = $"{users.Count(user => !user.IsActive)} inactive";
+    }
+
     public static BackOfficeProcessViewModel CreateMenuManagement(IMenuService menuService)
     {
         return new(
@@ -252,7 +357,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             stockService: stockService);
     }
 
-    public static BackOfficeProcessViewModel CreateOrders()
+    public static BackOfficeProcessViewModel CreateOrders(IOrderService orderService)
     {
         return new(
             "Orders",
@@ -270,14 +375,15 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
                 new AdminRecordItem("INV-000126", "Mika Santos - pickup 3:00 PM", "PHP 1,240.00", "Paid"),
                 new AdminRecordItem("INV-000127", "Walk-in customer", "PHP 680.00", "Draft"),
                 new AdminRecordItem("INV-000128", "R. Cruz - event beans", "PHP 5,920.00", "Due")
-            ]);
+            ],
+            orderService: orderService);
     }
 
-    public static BackOfficeProcessViewModel CreateSales()
+    public static BackOfficeProcessViewModel CreateSales(ISaleService saleService)
     {
         return new(
             "Sales",
-            "Review receipts, cashier attribution, sale status, discounts, taxes, grand totals, and payment methods.",
+            "Review receipts from paid orders, cashier attribution, sale status, discounts, taxes, grand totals, and payment methods.",
             "PHP 18,420.00",
             "42 receipts",
             "PHP 438 avg",
@@ -291,7 +397,8 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
                 new AdminRecordItem("RCPT-000421", "Cashier: Aya - Card", "PHP 540.00", "Completed"),
                 new AdminRecordItem("RCPT-000422", "Cashier: Ben - Cash", "PHP 320.00", "Completed"),
                 new AdminRecordItem("RCPT-000423", "Cashier: Aya - Split", "PHP 1,180.00", "Completed")
-            ]);
+            ],
+            saleService: saleService);
     }
 
     public static BackOfficeProcessViewModel CreateEmployeeTime(ITimeEntryService timeEntryService)
@@ -316,7 +423,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             timeEntryService: timeEntryService);
     }
 
-    public static BackOfficeProcessViewModel CreatePayroll()
+    public static BackOfficeProcessViewModel CreatePayroll(ITimeEntryService timeEntryService)
     {
         return new(
             "Payroll",
@@ -334,10 +441,11 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
                 new AdminRecordItem("May 1 - May 15", "Processed payroll run", "PHP 14,920.00", "Processed"),
                 new AdminRecordItem("May 16 - May 31", "Current payroll period", "PHP 0.00", "Draft"),
                 new AdminRecordItem("Overtime Review", "6 hours pending approval", "PHP 855.00", "Pending")
-            ]);
+            ],
+            timeEntryService: timeEntryService);
     }
 
-    public static BackOfficeProcessViewModel CreateUsersRoles()
+    public static BackOfficeProcessViewModel CreateUsersRoles(IUserService userService)
     {
         return new(
             "Users and Roles",
@@ -355,7 +463,8 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
                 new AdminRecordItem("Admin User", "admin@groundcontrol.local - Admin", "PHP 150/hr", "Active"),
                 new AdminRecordItem("Aya Reyes", "aya@groundcontrol.local - Barista", "PHP 95/hr", "Active"),
                 new AdminRecordItem("Ben Lim", "ben@groundcontrol.local - Cashier", "PHP 90/hr", "Active")
-            ]);
+            ],
+            userService: userService);
     }
 
     private static string GetMenuCategoryName(int category)
@@ -370,6 +479,54 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
             6 => "Add-On",
             7 => "Merchandise",
             _ => "Menu"
+        };
+    }
+
+    private static string GetOrderStatusName(int status)
+    {
+        return status switch
+        {
+            1 => "Draft",
+            2 => "Issued",
+            3 => "Partially Paid",
+            4 => "Paid",
+            5 => "Cancelled",
+            6 => "Refunded",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetSaleStatusName(int status)
+    {
+        return status switch
+        {
+            1 => "Pending",
+            2 => "Completed",
+            3 => "Voided",
+            4 => "Refunded",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetPayrollStatusName(int status)
+    {
+        return status switch
+        {
+            1 => "Processed",
+            2 => "Voided",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetUserRoleName(int role)
+    {
+        return role switch
+        {
+            1 => "Admin",
+            2 => "Manager",
+            3 => "Cashier",
+            4 => "Barista",
+            _ => "Unknown"
         };
     }
 }

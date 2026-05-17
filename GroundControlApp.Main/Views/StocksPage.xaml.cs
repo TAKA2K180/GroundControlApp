@@ -7,7 +7,6 @@ public partial class StocksPage : ContentPage
 {
     private readonly BackOfficeProcessViewModel viewModel =
         BackOfficeProcessViewModel.CreateStocks(AppServices.GetRequiredService<IStockService>());
-    private bool hasLoaded;
 
     public StocksPage()
     {
@@ -18,8 +17,6 @@ public partial class StocksPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (hasLoaded) return;
-        hasLoaded = true;
         await viewModel.LoadAsync();
     }
 }

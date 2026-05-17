@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
+using GroundControlApp.Data.DTOs;
 using GroundControlApp.Data.Interfaces;
 using GroundControlApp.Main.Models;
 
@@ -8,33 +9,36 @@ namespace GroundControlApp.Main.ViewModels;
 
 public sealed class MainPageViewModel : ObservableObject
 {
-    private const string TestAccountEmail = "admin@groundcontrol.local";
-    private const string TestAccountSecret = "1234";
+    private const string TestAccountName = "Admin User";
+    private const string TestAccountPin = "1234";
 
     private readonly IMenuService menuService;
+    private readonly IOrderService orderService;
     private readonly List<PosProduct> allProducts = [];
     private string searchText = string.Empty;
-    private string selectedTender = "Card";
+    private string customerName = string.Empty;
+    private string selectedTender = "Cash";
     private string shiftStatus = "Point of Sale";
     private string syncStatus = "Ready for API-backed inventory.";
     private string ticketStatus = "New ticket";
     private string selectedCategory = "All";
-    private string signInEmail = TestAccountEmail;
-    private string signInSecret = string.Empty;
+    private string signInName = TestAccountName;
+    private string signInPin = string.Empty;
     private string signInMessage = string.Empty;
     private bool isSignInVisible;
     private bool isSignedIn;
 
-    public MainPageViewModel(IMenuService menuService)
+    public MainPageViewModel(IMenuService menuService, IOrderService orderService)
     {
         this.menuService = menuService;
+        this.orderService = orderService;
         Categories = [];
 
         Products = [];
 
         CartItems = [];
 
-        KeypadValues = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "CLR", "0", "."];
+        PendingOrders = [];
 
         SelectCategoryCommand = new RelayCommand(parameter =>
         {
@@ -57,7 +61,6 @@ public sealed class MainPageViewModel : ObservableObject
                 SelectedTender = tender;
             }
         });
-        KeypadCommand = new RelayCommand(_ => { });
         IncreaseQuantityCommand = new RelayCommand(parameter =>
         {
             if (parameter is CartItem item)
@@ -104,11 +107,14 @@ public sealed class MainPageViewModel : ObservableObject
         ShowSignInCommand = new RelayCommand(() => IsSignInVisible = true);
         HideSignInCommand = new RelayCommand(HideSignIn);
         SignInCommand = new RelayCommand(SignIn);
+        LogoutCommand = new RelayCommand(Logout);
         OpenAdminCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync(nameof(Views.AdminPanelPage)), () => IsSignedIn);
+        ScanCatalogCommand = new AsyncRelayCommand(() => LoadAsync());
         OpenShiftCommand = new RelayCommand(() => ShiftStatus = "Shift open");
         SyncCommand = new RelayCommand(() => SyncStatus = "Synced");
         HoldTicketCommand = new RelayCommand(() => TicketStatus = "On hold");
-        ChargeCommand = new RelayCommand(() => TicketStatus = "Ready to charge");
+        ChargeCommand = new AsyncRelayCommand(() => CreatePendingOrderAsync());
+        FinishOrderCommand = new AsyncRelayCommand(FinishOrderAsync);
         DiscountCommand = new RelayCommand(() => TicketStatus = "Discount pending");
         VoidCommand = new RelayCommand(() => TicketStatus = "Void pending");
     }
@@ -119,15 +125,13 @@ public sealed class MainPageViewModel : ObservableObject
 
     public ObservableCollection<CartItem> CartItems { get; }
 
-    public ObservableCollection<string> KeypadValues { get; }
+    public ObservableCollection<PendingOrderItem> PendingOrders { get; }
 
     public ICommand SelectCategoryCommand { get; }
 
     public ICommand AddProductCommand { get; }
 
     public ICommand SelectTenderCommand { get; }
-
-    public ICommand KeypadCommand { get; }
 
     public ICommand IncreaseQuantityCommand { get; }
 
@@ -145,7 +149,11 @@ public sealed class MainPageViewModel : ObservableObject
 
     public ICommand SignInCommand { get; }
 
+    public ICommand LogoutCommand { get; }
+
     public ICommand OpenAdminCommand { get; }
+
+    public ICommand ScanCatalogCommand { get; }
 
     public ICommand OpenShiftCommand { get; }
 
@@ -154,6 +162,8 @@ public sealed class MainPageViewModel : ObservableObject
     public ICommand HoldTicketCommand { get; }
 
     public ICommand ChargeCommand { get; }
+
+    public ICommand FinishOrderCommand { get; }
 
     public ICommand DiscountCommand { get; }
 
@@ -165,22 +175,28 @@ public sealed class MainPageViewModel : ObservableObject
         set => SetProperty(ref searchText, value);
     }
 
+    public string CustomerName
+    {
+        get => customerName;
+        set => SetProperty(ref customerName, value);
+    }
+
     public string SelectedTender
     {
         get => selectedTender;
         set => SetProperty(ref selectedTender, value);
     }
 
-    public string SignInEmail
+    public string SignInName
     {
-        get => signInEmail;
-        set => SetProperty(ref signInEmail, value);
+        get => signInName;
+        set => SetProperty(ref signInName, value);
     }
 
-    public string SignInSecret
+    public string SignInPin
     {
-        get => signInSecret;
-        set => SetProperty(ref signInSecret, value);
+        get => signInPin;
+        set => SetProperty(ref signInPin, value);
     }
 
     public string SignInMessage
@@ -306,7 +322,7 @@ public sealed class MainPageViewModel : ObservableObject
         }
         else
         {
-            var item = new CartItem(product.Name, string.Empty, 1, Math.Max(product.Price, 0));
+            var item = new CartItem(product.Id, product.Name, string.Empty, 1, Math.Max(product.Price, 0));
             item.PropertyChanged += OnCartItemPropertyChanged;
             item.TotalChanged += OnCartItemTotalChanged;
             CartItems.Add(item);
@@ -362,6 +378,119 @@ public sealed class MainPageViewModel : ObservableObject
         TicketStatus = CartItems.Count == 0
             ? "New ticket"
             : $"{CartItems.Sum(cartItem => cartItem.Quantity)} item(s) in ticket";
+        RefreshTotals();
+    }
+
+    private async Task CreatePendingOrderAsync(CancellationToken cancellationToken = default)
+    {
+        if (CartItems.Count == 0)
+        {
+            TicketStatus = "Add items before charging.";
+            return;
+        }
+
+        try
+        {
+            TicketStatus = "Sending order to queue...";
+            var order = await orderService.CreateOrderAsync(
+                CreateOrderRequest(),
+                $"pos-order-{Guid.NewGuid():N}",
+                cancellationToken);
+
+            PendingOrders.Add(new PendingOrderItem(
+                order.Id,
+                order.InvoiceNumber,
+                GetOrderCustomerName(),
+                CreateOrderSummary(),
+                order.GrandTotal));
+
+            ClearTicket();
+            TicketStatus = $"Order {order.InvoiceNumber} pending.";
+        }
+        catch (Exception ex)
+        {
+            TicketStatus = $"Order failed: {ex.Message}";
+        }
+    }
+
+    private async Task FinishOrderAsync(object? parameter)
+    {
+        if (parameter is not PendingOrderItem pendingOrder)
+        {
+            return;
+        }
+
+        try
+        {
+            pendingOrder.IsFinishing = true;
+            pendingOrder.Status = "Finishing";
+            await orderService.PayOrderAsync(
+                pendingOrder.Id,
+                new PayOrderDto(pendingOrder.Total, null),
+                $"pos-payment-{pendingOrder.Id:N}",
+                CancellationToken.None);
+
+            PendingOrders.Remove(pendingOrder);
+            TicketStatus = $"Order {pendingOrder.InvoiceNumber} finished. Ingredients deducted.";
+        }
+        catch (Exception ex)
+        {
+            pendingOrder.Status = "Pending";
+            TicketStatus = $"Finish failed: {ex.Message}";
+        }
+        finally
+        {
+            pendingOrder.IsFinishing = false;
+        }
+    }
+
+    private CreateOrderDto CreateOrderRequest()
+    {
+        return new CreateOrderDto(
+            InvoiceNumber: null,
+            DueAtUtc: null,
+            CustomerName: string.IsNullOrWhiteSpace(CustomerName) ? null : CustomerName.Trim(),
+            CustomerEmail: null,
+            CustomerPhone: null,
+            Subtotal: Subtotal,
+            DiscountTotal: 0,
+            TaxTotal: 0,
+            GrandTotal: Total,
+            Notes: $"Tender: {SelectedTender}",
+            UserId: null,
+            Details: CartItems.Select(item => new CreateOrderDetailDto(
+                MenuId: item.MenuId,
+                Quantity: item.Quantity,
+                UnitPrice: item.UnitPrice,
+                DiscountAmount: 0,
+                TaxAmount: 0,
+                LineTotal: CalculateCartItemTotal(item),
+                Description: item.Name,
+                Notes: item.Note,
+                AddOns: item.AddOns.Select(addOn => new CreateOrderDetailAddOnDto(addOn.Name, addOn.Price)).ToList()))
+                .ToList());
+    }
+
+    private string CreateOrderSummary()
+    {
+        return string.Join(", ", CartItems.Select(item => $"{item.Quantity}x {item.Name}"));
+    }
+
+    private string GetOrderCustomerName()
+    {
+        return string.IsNullOrWhiteSpace(CustomerName) ? "Walk-in customer" : CustomerName.Trim();
+    }
+
+    private void ClearTicket()
+    {
+        foreach (var item in CartItems)
+        {
+            item.PropertyChanged -= OnCartItemPropertyChanged;
+            item.TotalChanged -= OnCartItemTotalChanged;
+        }
+
+        CartItems.Clear();
+        CustomerName = string.Empty;
         RefreshTotals();
     }
 
@@ -448,17 +577,27 @@ public sealed class MainPageViewModel : ObservableObject
 
     private void SignIn()
     {
-        if (!string.Equals(SignInEmail.Trim(), TestAccountEmail, StringComparison.OrdinalIgnoreCase) ||
-            SignInSecret != TestAccountSecret)
+        if (!string.Equals(SignInName.Trim(), TestAccountName, StringComparison.OrdinalIgnoreCase) ||
+            SignInPin != TestAccountPin)
         {
-            SignInMessage = $"Temporary account: {TestAccountEmail} / {TestAccountSecret}";
+            SignInMessage = $"Temporary sign in: {TestAccountName} / {TestAccountPin}";
             return;
         }
 
         IsSignedIn = true;
         SignInMessage = string.Empty;
+        SignInPin = string.Empty;
         IsSignInVisible = false;
         ShiftStatus = "Admin signed in";
+    }
+
+    public void Logout()
+    {
+        IsSignedIn = false;
+        SignInPin = string.Empty;
+        SignInMessage = string.Empty;
+        IsSignInVisible = false;
+        ShiftStatus = "Point of Sale";
     }
 
     private void HideSignIn()

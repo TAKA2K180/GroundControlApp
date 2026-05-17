@@ -14,4 +14,9 @@ public sealed class TimeEntryService : GroundControlApiServiceBase, ITimeEntrySe
     {
         return await GetAsync<TimeEntryDto>("api/v1/employee-time/time-entries", cancellationToken);
     }
+
+    public async Task<IReadOnlyCollection<PayrollRunDto>> GetPayrollRunsAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetAsync<PayrollRunDto>("api/v1/employee-time/payroll-runs", cancellationToken);
+    }
 }

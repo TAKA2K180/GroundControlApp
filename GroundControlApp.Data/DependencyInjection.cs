@@ -17,6 +17,9 @@ public static class DependencyInjection
         services.AddSingleton<IMenuService, MenuService>();
         services.AddSingleton<IIngredientService, IngredientService>();
         services.AddSingleton<IStockService, StockService>();
+        services.AddSingleton<IOrderService, OrderService>();
+        services.AddSingleton<ISaleService, SaleService>();
+        services.AddSingleton<IUserService, UserService>();
         services.AddSingleton<ITimeEntryService, TimeEntryService>();
 
         return services;

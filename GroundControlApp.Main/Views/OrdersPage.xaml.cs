@@ -1,3 +1,4 @@
+using GroundControlApp.Data.Interfaces;
 using GroundControlApp.Main.ViewModels;
 
 namespace GroundControlApp.Main.Views;
@@ -5,8 +6,7 @@ namespace GroundControlApp.Main.Views;
 public partial class OrdersPage : ContentPage
 {
     private readonly BackOfficeProcessViewModel viewModel =
-        BackOfficeProcessViewModel.CreateOrders();
-    private bool hasLoaded;
+        BackOfficeProcessViewModel.CreateOrders(AppServices.GetRequiredService<IOrderService>());
 
     public OrdersPage()
     {
@@ -17,8 +17,6 @@ public partial class OrdersPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (hasLoaded) return;
-        hasLoaded = true;
         await viewModel.LoadAsync();
     }
 }

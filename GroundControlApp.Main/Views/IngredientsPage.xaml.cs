@@ -5,9 +5,8 @@ namespace GroundControlApp.Main.Views;
 
 public partial class IngredientsPage : ContentPage
 {
-    private readonly BackOfficeProcessViewModel viewModel =
-        BackOfficeProcessViewModel.CreateIngredients(AppServices.GetRequiredService<IIngredientService>());
-    private bool hasLoaded;
+    private readonly IngredientsManagementViewModel viewModel =
+        new(AppServices.GetRequiredService<IIngredientService>());
 
     public IngredientsPage()
     {
@@ -18,8 +17,6 @@ public partial class IngredientsPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (hasLoaded) return;
-        hasLoaded = true;
         await viewModel.LoadAsync();
     }
 }

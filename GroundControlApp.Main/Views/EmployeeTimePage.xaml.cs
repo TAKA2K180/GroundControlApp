@@ -7,7 +7,6 @@ public partial class EmployeeTimePage : ContentPage
 {
     private readonly BackOfficeProcessViewModel viewModel =
         BackOfficeProcessViewModel.CreateEmployeeTime(AppServices.GetRequiredService<ITimeEntryService>());
-    private bool hasLoaded;
 
     public EmployeeTimePage()
     {
@@ -18,8 +17,6 @@ public partial class EmployeeTimePage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (hasLoaded) return;
-        hasLoaded = true;
         await viewModel.LoadAsync();
     }
 }

@@ -14,4 +14,14 @@ public sealed class MenuService : GroundControlApiServiceBase, IMenuService
     {
         return await GetAsync<MenuDto>("api/v1/menus", cancellationToken);
     }
+
+    public Task<MenuDto> CreateMenuAsync(SaveMenuDto menu, CancellationToken cancellationToken = default)
+    {
+        return PostAsync<SaveMenuDto, MenuDto>("api/v1/menus", menu, null, cancellationToken);
+    }
+
+    public Task<MenuDto> UpdateMenuAsync(Guid id, SaveMenuDto menu, CancellationToken cancellationToken = default)
+    {
+        return PutAsync<SaveMenuDto, MenuDto>($"api/v1/menus/{id}", menu, cancellationToken);
+    }
 }

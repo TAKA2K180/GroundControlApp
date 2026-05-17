@@ -19,16 +19,16 @@
                            FontFamily="OpenSansSemibold"
                            FontSize="22"
                            TextColor="#14213D" />
-                    <Label Text="Use an admin, manager, cashier, or barista account."
+                    <Label Text="Use a staff name and PIN."
                            FontSize="12"
                            TextColor="#667085" />
-                    <Label Text="Temporary test account: admin@groundcontrol.local / 1234"
+                    <Label Text="Temporary sign in: Admin User / 1234"
                            FontSize="12"
                            TextColor="#087443" />
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Email"
+                    <Label Text="Name"
                            FontSize="12"
                            TextColor="#344054" />
                     <Border Padding="10,0"
@@ -36,9 +36,8 @@
                             Stroke="#DDE3EA"
                             StrokeShape="RoundRectangle 8"
                             HeightRequest="46">
-                        <Entry Text="{Binding SignInEmail}"
-                               Keyboard="Email"
-                               Placeholder="admin@groundcontrol.local"
+                        <Entry Text="{Binding SignInName}"
+                               Placeholder="Staff name"
                                PlaceholderColor="#98A2B3"
                                TextColor="#111827"
                                BackgroundColor="Transparent" />
@@ -46,7 +45,7 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Password or PIN"
+                    <Label Text="PIN"
                            FontSize="12"
                            TextColor="#344054" />
                     <Border Padding="10,0"
@@ -54,9 +53,10 @@
                             Stroke="#DDE3EA"
                             StrokeShape="RoundRectangle 8"
                             HeightRequest="46">
-                        <Entry Text="{Binding SignInSecret}"
+                        <Entry Text="{Binding SignInPin}"
                                IsPassword="True"
-                               Placeholder="Enter password or PIN"
+                               Keyboard="Numeric"
+                               Placeholder="Enter PIN"
                                PlaceholderColor="#98A2B3"
                                TextColor="#111827"
                                BackgroundColor="Transparent" />

@@ -4,9 +4,18 @@ namespace GroundControlApp.Main.Views;
 
 public partial class AdminPanelPage : ContentPage
 {
+    private readonly AdminPanelViewModel viewModel;
+
     public AdminPanelPage()
     {
         InitializeComponent();
-        BindingContext = AppServices.GetRequiredService<AdminPanelViewModel>();
+        viewModel = AppServices.GetRequiredService<AdminPanelViewModel>();
+        BindingContext = viewModel;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await viewModel.LoadAsync();
     }
 }
