@@ -16,6 +16,12 @@
         Route="LoadingPage" />
 
     <ShellContent
+        x:Name="HomeShellContent"
+        Title="Home"
+        ContentTemplate="{DataTemplate views:HomePage}"
+        Route="HomePage" />
+
+    <ShellContent
         x:Name="MainShellContent"
         Title="Point of Sale"
         ContentTemplate="{DataTemplate local:MainPage}"

@@ -26,6 +26,6 @@ public partial class LoadingPage : ContentPage
         var minimumDisplayTime = Task.Delay(1400);
         await viewModel.InitializeAsync();
         await minimumDisplayTime;
-        await Shell.Current.GoToAsync("//MainPage");
+        await Shell.Current.GoToAsync("//HomePage");
     }
 }

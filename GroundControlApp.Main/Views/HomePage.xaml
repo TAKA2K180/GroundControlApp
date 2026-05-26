@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GroundControlApp.Main.Views.HomePage"
+             x:Name="HomePageRoot"
+             BackgroundColor="#F4F6F8">
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView>
+            <VerticalStackLayout Padding="18,18,18,28" Spacing="14">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="0" VerticalOptions="Center">
+                        <Label Text="Ground Control"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="28"
+                               TextColor="#14213D"
+                               SemanticProperties.HeadingLevel="Level1" />
+                        <Label Text="{Binding WelcomeText}"
+                               FontSize="12"
+                               TextColor="#667085" />
+                    </VerticalStackLayout>
+                    <Grid Grid.Column="1">
+                        <Button Text="Account"
+                                Command="{Binding SignInCommand}"
+                                IsVisible="{Binding IsGuestVisible}"
+                                BackgroundColor="#14213D"
+                                TextColor="#FFFFFF"
+                                FontFamily="OpenSansSemibold"
+                                CornerRadius="8"
+                                Padding="18,10"
+                                VerticalOptions="Center" />
+                        <Button Text="Sign Out"
+                                Command="{Binding SignOutCommand}"
+                                IsVisible="{Binding IsSignedInVisible}"
+                                BackgroundColor="#FEE4E2"
+                                TextColor="#B42318"
+                                FontFamily="OpenSansSemibold"
+                                CornerRadius="8"
+                                Padding="18,10"
+                                VerticalOptions="Center" />
+                    </Grid>
+                </Grid>
+
+                <Border Padding="16"
+                        BackgroundColor="#14213D"
+                        Stroke="#14213D"
+                        StrokeShape="RoundRectangle 8">
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="12">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="{Binding DisplayName}"
+                                   FontFamily="OpenSansSemibold"
+                                   FontSize="24"
+                                   TextColor="#FFFFFF" />
+                            <Label Text="{Binding RoleName, StringFormat='Current access: {0}'}"
+                                   FontSize="13"
+                                   TextColor="#C7D7FE" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1"
+                                             Spacing="2"
+                                             HorizontalOptions="End">
+                            <Label Text="Status"
+                                   FontSize="13"
+                                   TextColor="#C7D7FE"
+                                   HorizontalTextAlignment="End" />
+                            <Label Text="{Binding FeaturedMetric}"
+                                   FontFamily="OpenSansSemibold"
+                                   FontSize="24"
+                                   TextColor="#FFFFFF"
+                                   HorizontalTextAlignment="End" />
+                        </VerticalStackLayout>
+                        <Label Grid.Row="1"
+                               Grid.ColumnSpan="2"
+                               Text="Choose a workspace below. Role-based tools appear as access changes."
+                               FontSize="13"
+                               TextColor="#C7D7FE" />
+                        <Button Grid.Row="2"
+                                Grid.ColumnSpan="2"
+                                Text="{Binding FeaturedTitle, StringFormat='Open {0}'}"
+                                Command="{Binding OpenNavigationItemCommand}"
+                                CommandParameter="{Binding FeaturedItem}"
+                                HeightRequest="48"
+                                BackgroundColor="#FFFFFF"
+                                TextColor="#14213D"
+                                FontFamily="OpenSansSemibold"
+                                CornerRadius="8" />
+                    </Grid>
+                </Border>
+
+                <Border Padding="10,14"
+                        BackgroundColor="#FFFFFF"
+                        Stroke="#DDE3EA"
+                        StrokeShape="RoundRectangle 8">
+                    <CollectionView ItemsSource="{Binding NavigationItems}"
+                                    SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout Orientation="Vertical"
+                                             Span="4"
+                                             HorizontalItemSpacing="4"
+                                             VerticalItemSpacing="10" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="4" RowDefinitions="Auto,Auto" RowSpacing="8">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding BindingContext.OpenNavigationItemCommand, Source={x:Reference HomePageRoot}}"
+                                                              CommandParameter="{Binding .}" />
+                                    </Grid.GestureRecognizers>
+                                    <Border WidthRequest="62"
+                                            HeightRequest="62"
+                                            HorizontalOptions="Center"
+                                            BackgroundColor="#F4F6F8"
+                                            Stroke="#DDE3EA"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 8">
+                                        <Label Text="{Binding Icon}"
+                                               FontSize="28"
+                                               TextColor="{Binding AccentColor}"
+                                               HorizontalTextAlignment="Center"
+                                               VerticalTextAlignment="Center" />
+                                    </Border>
+                                    <Label Grid.Row="1"
+                                           Text="{Binding Title}"
+                                           FontFamily="OpenSansSemibold"
+                                           FontSize="12"
+                                           TextColor="#14213D"
+                                           LineBreakMode="TailTruncation"
+                                           HorizontalTextAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Border>
+
+                <Border Padding="16,0,0,0"
+                        HeightRequest="116"
+                        BackgroundColor="#FFFFFF"
+                        Stroke="#DDE3EA"
+                        StrokeShape="RoundRectangle 8">
+                    <Grid ColumnDefinitions="*,150">
+                        <VerticalStackLayout Spacing="8" VerticalOptions="Center">
+                            <Label Text="Need a faster flow?"
+                                   FontFamily="OpenSansSemibold"
+                                   FontSize="19"
+                                   TextColor="#14213D" />
+                            <Label Text="Open POS from anywhere, then jump back home when you need another workspace."
+                                   FontSize="13"
+                                   TextColor="#667085"
+                                   LineBreakMode="WordWrap" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Go to POS"
+                                Command="{Binding OpenNavigationItemCommand}"
+                                CommandParameter="{Binding FeaturedItem}"
+                                BackgroundColor="#14213D"
+                                TextColor="#FFFFFF"
+                                FontFamily="OpenSansSemibold"
+                                CornerRadius="0" />
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Border Grid.Row="1"
+                Padding="12,8"
+                BackgroundColor="#FFFFFF"
+                Stroke="#DDE3EA"
+                StrokeShape="RoundRectangle 8,8,0,0">
+            <CollectionView ItemsSource="{Binding FooterItems}"
+                            SelectionMode="None"
+                            HeightRequest="70">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical"
+                                     Span="5"
+                                     HorizontalItemSpacing="0"
+                                     VerticalItemSpacing="0" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                            <VerticalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding BindingContext.OpenNavigationItemCommand, Source={x:Reference HomePageRoot}}"
+                                                      CommandParameter="{Binding .}" />
+                            </VerticalStackLayout.GestureRecognizers>
+                            <Label Text="{Binding Icon}"
+                                   FontSize="22"
+                                   TextColor="{Binding AccentColor}"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding Title}"
+                                   FontSize="11"
+                                   TextColor="#667085"
+                                   LineBreakMode="TailTruncation"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Border>
+    </Grid>
+</ContentPage>

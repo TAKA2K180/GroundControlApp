@@ -4,6 +4,7 @@ using System.Windows.Input;
 using GroundControlApp.Data.DTOs;
 using GroundControlApp.Data.Interfaces;
 using GroundControlApp.Main.Models;
+using GroundControlApp.Main.Services;
 
 namespace GroundControlApp.Main.ViewModels;
 
@@ -11,12 +12,12 @@ public sealed class MainPageViewModel : ObservableObject
 {
     private const string TestAccountName = "Admin User";
     private const string TestAccountPin = "1234";
-    private static readonly Guid TestAccountUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private const int AddOnMenuCategory = 6;
     private readonly IMenuService menuService;
     private readonly IAddOnService addOnService;
     private readonly IIngredientService ingredientService;
     private readonly IOrderService orderService;
+    private readonly AppIdentitySession identitySession;
     private readonly List<PosProduct> allProducts = [];
     private readonly List<AddOnOption> allAddOnOptions = [];
     private readonly Dictionary<Guid, IReadOnlyCollection<Guid>> menuIngredientIdsByMenuId = [];
@@ -32,7 +33,6 @@ public sealed class MainPageViewModel : ObservableObject
     private string signInMessage = string.Empty;
     private CartItem? selectedAddOnCartItem;
     private bool isSignInVisible;
-    private bool isSignedIn;
     private bool isAddOnPickerVisible;
     private bool isLowStockNotificationVisible;
 
@@ -40,12 +40,15 @@ public sealed class MainPageViewModel : ObservableObject
         IMenuService menuService,
         IAddOnService addOnService,
         IIngredientService ingredientService,
-        IOrderService orderService)
+        IOrderService orderService,
+        AppIdentitySession identitySession)
     {
         this.menuService = menuService;
         this.addOnService = addOnService;
         this.ingredientService = ingredientService;
         this.orderService = orderService;
+        this.identitySession = identitySession;
+        identitySession.PropertyChanged += OnIdentitySessionChanged;
         Categories = [];
 
         Products = [];
@@ -135,7 +138,8 @@ public sealed class MainPageViewModel : ObservableObject
         HideSignInCommand = new RelayCommand(HideSignIn);
         SignInCommand = new RelayCommand(SignIn);
         LogoutCommand = new RelayCommand(Logout);
-        OpenAdminCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync(nameof(Views.AdminPanelPage)), () => IsSignedIn);
+        OpenHomeCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync("//HomePage"));
+        OpenAdminCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync(nameof(Views.AdminPanelPage)), () => IsAdminVisible);
         ScanCatalogCommand = new AsyncRelayCommand(() => LoadAsync());
         OpenShiftCommand = new RelayCommand(() => ShiftStatus = "Shift open");
         SyncCommand = new RelayCommand(() => SyncStatus = "Synced");
@@ -187,6 +191,8 @@ public sealed class MainPageViewModel : ObservableObject
     public ICommand SignInCommand { get; }
 
     public ICommand LogoutCommand { get; }
+
+    public ICommand OpenHomeCommand { get; }
 
     public ICommand OpenAdminCommand { get; }
 
@@ -270,25 +276,12 @@ public sealed class MainPageViewModel : ObservableObject
 
     public bool IsSignedIn
     {
-        get => isSignedIn;
-        private set
-        {
-            if (SetProperty(ref isSignedIn, value))
-            {
-                OnPropertyChanged(nameof(IsGuestVisible));
-                OnPropertyChanged(nameof(IsAdminVisible));
-                OnPropertyChanged(nameof(SignInButtonText));
-                if (OpenAdminCommand is AsyncRelayCommand openAdminCommand)
-                {
-                    openAdminCommand.RaiseCanExecuteChanged();
-                }
-            }
-        }
+        get => identitySession.IsSignedIn;
     }
 
     public bool IsGuestVisible => !IsSignedIn;
 
-    public bool IsAdminVisible => IsSignedIn;
+    public bool IsAdminVisible => identitySession.CanAccess(AppRole.Manager);
 
     public string SignInButtonText => IsSignedIn ? "Signed In" : "Sign In";
 
@@ -752,7 +745,7 @@ public sealed class MainPageViewModel : ObservableObject
             return;
         }
 
-        IsSignedIn = true;
+        identitySession.SignInTemporaryAdmin();
         SignInMessage = string.Empty;
         SignInPin = string.Empty;
         IsSignInVisible = false;
@@ -761,7 +754,7 @@ public sealed class MainPageViewModel : ObservableObject
 
     public void Logout()
     {
-        IsSignedIn = false;
+        identitySession.SignOut();
         SignInPin = string.Empty;
         SignInMessage = string.Empty;
         IsSignInVisible = false;
@@ -776,7 +769,21 @@ public sealed class MainPageViewModel : ObservableObject
 
     private Guid? GetCurrentUserId()
     {
-        return IsSignedIn ? TestAccountUserId : null;
+        return identitySession.CurrentUserId;
     }
 
+    private void OnIdentitySessionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(AppIdentitySession.IsSignedIn) or nameof(AppIdentitySession.Role))
+        {
+            OnPropertyChanged(nameof(IsSignedIn));
+            OnPropertyChanged(nameof(IsGuestVisible));
+            OnPropertyChanged(nameof(IsAdminVisible));
+            OnPropertyChanged(nameof(SignInButtonText));
+            if (OpenAdminCommand is AsyncRelayCommand openAdminCommand)
+            {
+                openAdminCommand.RaiseCanExecuteChanged();
+            }
+        }
+    }
 }

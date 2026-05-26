@@ -17,6 +17,8 @@ namespace GroundControlApp.Main
                 });
 
             builder.Services.AddGroundControlAppData(GetApiBaseAddress());
+            builder.Services.AddSingleton<Services.AppIdentitySession>();
+            builder.Services.AddTransient<ViewModels.HomePageViewModel>();
             builder.Services.AddTransient<ViewModels.MainPageViewModel>();
             builder.Services.AddTransient<ViewModels.AdminPanelViewModel>();
 

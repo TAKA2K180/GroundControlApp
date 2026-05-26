@@ -72,6 +72,11 @@
                                 BackgroundColor="#F4F6F8"
                                 TextColor="#344054"
                                 CornerRadius="8" />
+                        <Button Text="Home"
+                                Command="{Binding OpenHomeCommand}"
+                                BackgroundColor="#F4F6F8"
+                                TextColor="#344054"
+                                CornerRadius="8" />
                         <Button Text="Admin"
                                 Command="{Binding OpenAdminCommand}"
                                 IsVisible="{Binding IsAdminVisible}"
