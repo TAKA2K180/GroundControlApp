@@ -25,7 +25,7 @@ public sealed record CreateOrderDetailDto(
     string? Notes,
     List<CreateOrderDetailAddOnDto>? AddOns);
 
-public sealed record CreateOrderDetailAddOnDto(string Name, decimal Price);
+public sealed record CreateOrderDetailAddOnDto(Guid? AddOnId, string Name, decimal Price);
 
 public sealed record PayOrderDto(decimal AmountPaid, Guid? UserId);
 
@@ -49,4 +49,4 @@ public sealed record OrderDetailDto(
     decimal LineTotal,
     IReadOnlyCollection<OrderDetailAddOnDto> AddOns);
 
-public sealed record OrderDetailAddOnDto(Guid Id, string Name, decimal Price);
+public sealed record OrderDetailAddOnDto(Guid Id, Guid? AddOnId, string Name, decimal Price);

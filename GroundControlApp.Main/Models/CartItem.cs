@@ -7,15 +7,15 @@ namespace GroundControlApp.Main.Models;
 public sealed class CartItem : ObservableObject
 {
     private int quantity;
-    private string addOnNameInput = string.Empty;
-    private string addOnPriceInput = string.Empty;
 
     public event EventHandler? TotalChanged;
 
-    public CartItem(Guid? menuId, string name, string note, int quantity, decimal unitPrice)
+    public CartItem(Guid? menuId, string name, int categoryId, string category, string note, int quantity, decimal unitPrice)
     {
         MenuId = menuId;
         Name = name;
+        CategoryId = categoryId;
+        Category = category;
         Note = note;
         this.quantity = quantity;
         UnitPrice = unitPrice;
@@ -26,6 +26,10 @@ public sealed class CartItem : ObservableObject
     public Guid? MenuId { get; }
 
     public string Name { get; }
+
+    public int CategoryId { get; }
+
+    public string Category { get; }
 
     public string Note { get; }
 
@@ -58,23 +62,9 @@ public sealed class CartItem : ObservableObject
 
     public string Detail => $"Qty {Quantity}{(string.IsNullOrWhiteSpace(Note) ? string.Empty : $" - {Note}")}";
 
-    public string AddOnNameInput
+    public void AddAddOn(Guid? addOnId, string name, decimal price)
     {
-        get => addOnNameInput;
-        set => SetProperty(ref addOnNameInput, value);
-    }
-
-    public string AddOnPriceInput
-    {
-        get => addOnPriceInput;
-        set => SetProperty(ref addOnPriceInput, value);
-    }
-
-    public void AddAddOn(string name, decimal price)
-    {
-        AddOns.Add(new CartAddOn(name, price));
-        AddOnNameInput = string.Empty;
-        AddOnPriceInput = string.Empty;
+        AddOns.Add(new CartAddOn(addOnId, name, price));
         RefreshTotals();
     }
 

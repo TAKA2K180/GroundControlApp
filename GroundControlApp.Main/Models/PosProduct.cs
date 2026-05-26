@@ -2,10 +2,11 @@ namespace GroundControlApp.Main.Models;
 
 public sealed class PosProduct
 {
-    public PosProduct(Guid id, string name, string category, decimal price)
+    public PosProduct(Guid id, string name, int categoryId, string category, decimal price)
     {
         Id = id;
         Name = name;
+        CategoryId = categoryId;
         Category = category;
         Price = price;
     }
@@ -13,6 +14,8 @@ public sealed class PosProduct
     public Guid Id { get; }
 
     public string Name { get; }
+
+    public int CategoryId { get; }
 
     public string Category { get; }
 

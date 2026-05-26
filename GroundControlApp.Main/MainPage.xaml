@@ -255,24 +255,9 @@
                                         </CollectionView.ItemTemplate>
                                     </CollectionView>
 
-                                    <Grid Grid.Row="2" ColumnDefinitions="*,88,Auto" ColumnSpacing="6">
-                                        <Entry Text="{Binding AddOnNameInput, Mode=TwoWay}"
-                                               Placeholder="Add-on"
-                                               PlaceholderColor="#98A2B3"
-                                               TextColor="#111827"
-                                               BackgroundColor="#FFFFFF"
-                                               HeightRequest="36" />
-                                        <Entry Grid.Column="1"
-                                               Text="{Binding AddOnPriceInput, Mode=TwoWay}"
-                                               Placeholder="Price"
-                                               PlaceholderColor="#98A2B3"
-                                               TextColor="#111827"
-                                               Keyboard="Numeric"
-                                               BackgroundColor="#FFFFFF"
-                                               HeightRequest="36" />
-                                        <Button Grid.Column="2"
-                                                Text="Add"
-                                                Command="{Binding BindingContext.AddCartItemAddOnCommand, Source={x:Reference RootPage}}"
+                                    <Grid Grid.Row="2" ColumnDefinitions="*" ColumnSpacing="6">
+                                        <Button Text="Add add-on"
+                                                Command="{Binding BindingContext.ShowCartItemAddOnPickerCommand, Source={x:Reference RootPage}}"
                                                 CommandParameter="{Binding .}"
                                                 BackgroundColor="#EAF8F0"
                                                 TextColor="#087443"
@@ -436,5 +421,7 @@
         </Grid>
     </ScrollView>
     <views:SignInView />
+    <views:LowStockNotificationView />
+    <views:AddOnPickerView />
     </Grid>
 </ContentPage>

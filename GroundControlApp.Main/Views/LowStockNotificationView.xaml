@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GroundControlApp.Main.Views.LowStockNotificationView"
+             IsVisible="{Binding IsLowStockNotificationVisible}">
+
+    <Grid BackgroundColor="#99000000"
+          Padding="18">
+        <Border Padding="18"
+                MaximumWidthRequest="560"
+                BackgroundColor="#FFFFFF"
+                Stroke="#FEDF89"
+                StrokeShape="RoundRectangle 8"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <VerticalStackLayout Spacing="3">
+                        <Label Text="{Binding LowStockNotificationTitle}"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="22"
+                               TextColor="#14213D" />
+                        <Label Text="Review these ingredients before continuing service."
+                               FontSize="12"
+                               TextColor="#667085" />
+                    </VerticalStackLayout>
+
+                    <Button Grid.Column="1"
+                            Text="X"
+                            Command="{Binding DismissLowStockNotificationCommand}"
+                            BackgroundColor="#FFF6E5"
+                            TextColor="#B54708"
+                            Style="{StaticResource PosTinyButtonStyle}" />
+                </Grid>
+
+                <BoxView Grid.Row="1"
+                         HeightRequest="1"
+                         BackgroundColor="#FEDF89" />
+
+                <CollectionView Grid.Row="2"
+                                ItemsSource="{Binding LowStockItems}"
+                                SelectionMode="None"
+                                HeightRequest="340">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,8"
+                                    Padding="12"
+                                    BackgroundColor="#FFFCF5"
+                                    Stroke="#FEDF89"
+                                    StrokeShape="RoundRectangle 8">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Name}"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="14"
+                                               TextColor="#14213D" />
+                                        <Label Text="{Binding ReorderDisplay}"
+                                               FontSize="12"
+                                               TextColor="#667085" />
+                                    </VerticalStackLayout>
+
+                                    <Label Grid.Column="1"
+                                           Text="{Binding QuantityDisplay}"
+                                           FontFamily="OpenSansSemibold"
+                                           TextColor="#B54708"
+                                           VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentView>

@@ -14,6 +14,7 @@ public static class DependencyInjection
         {
             BaseAddress = apiBaseAddress
         });
+        services.AddSingleton<IAddOnService, AddOnService>();
         services.AddSingleton<IMenuService, MenuService>();
         services.AddSingleton<IIngredientService, IngredientService>();
         services.AddSingleton<IStockService, StockService>();

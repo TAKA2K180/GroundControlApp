@@ -11,10 +11,15 @@ public sealed class MainPageViewModel : ObservableObject
 {
     private const string TestAccountName = "Admin User";
     private const string TestAccountPin = "1234";
-
+    private static readonly Guid TestAccountUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private const int AddOnMenuCategory = 6;
     private readonly IMenuService menuService;
+    private readonly IAddOnService addOnService;
+    private readonly IIngredientService ingredientService;
     private readonly IOrderService orderService;
     private readonly List<PosProduct> allProducts = [];
+    private readonly List<AddOnOption> allAddOnOptions = [];
+    private readonly Dictionary<Guid, IReadOnlyCollection<Guid>> menuIngredientIdsByMenuId = [];
     private string searchText = string.Empty;
     private string customerName = string.Empty;
     private string selectedTender = "Cash";
@@ -25,12 +30,21 @@ public sealed class MainPageViewModel : ObservableObject
     private string signInName = TestAccountName;
     private string signInPin = string.Empty;
     private string signInMessage = string.Empty;
+    private CartItem? selectedAddOnCartItem;
     private bool isSignInVisible;
     private bool isSignedIn;
+    private bool isAddOnPickerVisible;
+    private bool isLowStockNotificationVisible;
 
-    public MainPageViewModel(IMenuService menuService, IOrderService orderService)
+    public MainPageViewModel(
+        IMenuService menuService,
+        IAddOnService addOnService,
+        IIngredientService ingredientService,
+        IOrderService orderService)
     {
         this.menuService = menuService;
+        this.addOnService = addOnService;
+        this.ingredientService = ingredientService;
         this.orderService = orderService;
         Categories = [];
 
@@ -39,6 +53,10 @@ public sealed class MainPageViewModel : ObservableObject
         CartItems = [];
 
         PendingOrders = [];
+
+        AddOnOptions = [];
+
+        LowStockItems = [];
 
         SelectCategoryCommand = new RelayCommand(parameter =>
         {
@@ -90,11 +108,20 @@ public sealed class MainPageViewModel : ObservableObject
                 RemoveCartItem(item);
             }
         });
-        AddCartItemAddOnCommand = new RelayCommand(parameter =>
+        ShowCartItemAddOnPickerCommand = new RelayCommand(parameter =>
         {
             if (parameter is CartItem item)
             {
-                AddCartItemAddOn(item);
+                ShowCartItemAddOnPicker(item);
+            }
+        });
+        HideAddOnPickerCommand = new RelayCommand(HideAddOnPicker);
+        DismissLowStockNotificationCommand = new RelayCommand(() => IsLowStockNotificationVisible = false);
+        SelectCartItemAddOnCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is AddOnOption addOn)
+            {
+                SelectCartItemAddOn(addOn);
             }
         });
         RemoveCartItemAddOnCommand = new RelayCommand(parameter =>
@@ -127,6 +154,10 @@ public sealed class MainPageViewModel : ObservableObject
 
     public ObservableCollection<PendingOrderItem> PendingOrders { get; }
 
+    public ObservableCollection<AddOnOption> AddOnOptions { get; }
+
+    public ObservableCollection<LowStockAlertItem> LowStockItems { get; }
+
     public ICommand SelectCategoryCommand { get; }
 
     public ICommand AddProductCommand { get; }
@@ -139,7 +170,13 @@ public sealed class MainPageViewModel : ObservableObject
 
     public ICommand RemoveCartItemCommand { get; }
 
-    public ICommand AddCartItemAddOnCommand { get; }
+    public ICommand ShowCartItemAddOnPickerCommand { get; }
+
+    public ICommand HideAddOnPickerCommand { get; }
+
+    public ICommand DismissLowStockNotificationCommand { get; }
+
+    public ICommand SelectCartItemAddOnCommand { get; }
 
     public ICommand RemoveCartItemAddOnCommand { get; }
 
@@ -211,6 +248,26 @@ public sealed class MainPageViewModel : ObservableObject
         private set => SetProperty(ref isSignInVisible, value);
     }
 
+    public bool IsAddOnPickerVisible
+    {
+        get => isAddOnPickerVisible;
+        private set => SetProperty(ref isAddOnPickerVisible, value);
+    }
+
+    public bool IsLowStockNotificationVisible
+    {
+        get => isLowStockNotificationVisible;
+        private set => SetProperty(ref isLowStockNotificationVisible, value);
+    }
+
+    public string AddOnPickerTitle => selectedAddOnCartItem is null
+        ? "Select add-on"
+        : $"Select add-on for {selectedAddOnCartItem.Name}";
+
+    public string LowStockNotificationTitle => LowStockItems.Count == 1
+        ? "1 low-stock item"
+        : $"{LowStockItems.Count} low-stock items";
+
     public bool IsSignedIn
     {
         get => isSignedIn;
@@ -268,19 +325,34 @@ public sealed class MainPageViewModel : ObservableObject
         try
         {
             SyncStatus = "Loading menu catalog....";
-            var menus = await menuService.GetMenusAsync(cancellationToken);
+            var menusTask = menuService.GetMenusAsync(cancellationToken);
+            var addOnsTask = addOnService.GetAddOnsAsync(cancellationToken);
+            var ingredientsTask = ingredientService.GetIngredientsAsync(cancellationToken);
+
+            await Task.WhenAll(menusTask, addOnsTask, ingredientsTask);
+
+            var menus = await menusTask;
+            var addOns = await addOnsTask;
+            var ingredients = await ingredientsTask;
             Products.Clear();
             Categories.Clear();
             allProducts.Clear();
+            allAddOnOptions.Clear();
+            menuIngredientIdsByMenuId.Clear();
+            AddOnOptions.Clear();
+            LowStockItems.Clear();
 
             var availableMenus = menus
                 .Where(menu => menu.IsAvailable)
                 .ToArray();
+            var sellableMenus = availableMenus
+                .Where(menu => menu.Category != AddOnMenuCategory)
+                .ToArray();
 
-            if (availableMenus.Length > 0)
+            if (sellableMenus.Length > 0)
             {
                 if (selectedCategory != "All" &&
-                    availableMenus.All(menu => GetMenuCategoryName(menu.Category) != selectedCategory))
+                    sellableMenus.All(menu => GetMenuCategoryName(menu.Category) != selectedCategory))
                 {
                     selectedCategory = "All";
                 }
@@ -288,7 +360,7 @@ public sealed class MainPageViewModel : ObservableObject
                 Categories.Add(new PosCategory("All", selectedCategory == "All"));
             }
 
-            foreach (var categoryName in availableMenus
+            foreach (var categoryName in sellableMenus
                 .Select(menu => GetMenuCategoryName(menu.Category))
                 .Distinct()
                 .OrderBy(category => category))
@@ -296,10 +368,39 @@ public sealed class MainPageViewModel : ObservableObject
                 Categories.Add(new PosCategory(categoryName, categoryName == selectedCategory));
             }
 
-            foreach (var menu in availableMenus)
+            foreach (var menu in sellableMenus)
             {
-                allProducts.Add(new PosProduct(menu.Id, menu.Name, GetMenuCategoryName(menu.Category), menu.Price));
+                allProducts.Add(new PosProduct(menu.Id, menu.Name, menu.Category, GetMenuCategoryName(menu.Category), menu.Price));
+                menuIngredientIdsByMenuId[menu.Id] = (menu.Ingredients ?? [])
+                    .Select(ingredient => ingredient.IngredientId)
+                    .Distinct()
+                    .ToArray();
             }
+
+            foreach (var addOn in addOns
+                .Where(addOn => addOn.IsAvailable)
+                .OrderBy(addOn => addOn.Name))
+            {
+                allAddOnOptions.Add(new AddOnOption(
+                    addOn.Id,
+                    addOn.Name,
+                    addOn.MenuIds,
+                    addOn.Price));
+            }
+
+            foreach (var ingredient in ingredients
+                .Where(ingredient => ingredient.IsActive && ingredient.CurrentQuantity <= ingredient.ReorderLevel)
+                .OrderBy(ingredient => ingredient.Name))
+            {
+                LowStockItems.Add(new LowStockAlertItem(
+                    ingredient.Name,
+                    ingredient.CurrentQuantity,
+                    ingredient.ReorderLevel,
+                    ingredient.UnitOfMeasure));
+            }
+
+            OnPropertyChanged(nameof(LowStockNotificationTitle));
+            IsLowStockNotificationVisible = LowStockItems.Count > 0;
 
             ApplyCategoryFilter();
 
@@ -322,7 +423,7 @@ public sealed class MainPageViewModel : ObservableObject
         }
         else
         {
-            var item = new CartItem(product.Id, product.Name, string.Empty, 1, Math.Max(product.Price, 0));
+            var item = new CartItem(product.Id, product.Name, product.CategoryId, product.Category, string.Empty, 1, Math.Max(product.Price, 0));
             item.PropertyChanged += OnCartItemPropertyChanged;
             item.TotalChanged += OnCartItemTotalChanged;
             CartItems.Add(item);
@@ -424,12 +525,13 @@ public sealed class MainPageViewModel : ObservableObject
         {
             pendingOrder.IsFinishing = true;
             pendingOrder.Status = "Finishing";
-            await orderService.PayOrderAsync(
+            var order = await orderService.PayOrderAsync(
                 pendingOrder.Id,
-                new PayOrderDto(pendingOrder.Total, null),
+                new PayOrderDto(pendingOrder.Total, GetCurrentUserId()),
                 $"pos-payment-{pendingOrder.Id:N}",
                 CancellationToken.None);
 
+            await ShowLowStockNotificationForOrderAsync(order, CancellationToken.None);
             PendingOrders.Remove(pendingOrder);
             TicketStatus = $"Order {pendingOrder.InvoiceNumber} finished. Ingredients deducted.";
         }
@@ -457,7 +559,7 @@ public sealed class MainPageViewModel : ObservableObject
             TaxTotal: 0,
             GrandTotal: Total,
             Notes: $"Tender: {SelectedTender}",
-            UserId: null,
+            UserId: GetCurrentUserId(),
             Details: CartItems.Select(item => new CreateOrderDetailDto(
                 MenuId: item.MenuId,
                 Quantity: item.Quantity,
@@ -467,7 +569,7 @@ public sealed class MainPageViewModel : ObservableObject
                 LineTotal: CalculateCartItemTotal(item),
                 Description: item.Name,
                 Notes: item.Note,
-                AddOns: item.AddOns.Select(addOn => new CreateOrderDetailAddOnDto(addOn.Name, addOn.Price)).ToList()))
+                AddOns: item.AddOns.Select(addOn => new CreateOrderDetailAddOnDto(addOn.AddOnId, addOn.Name, addOn.Price)).ToList()))
                 .ToList());
     }
 
@@ -516,21 +618,87 @@ public sealed class MainPageViewModel : ObservableObject
         RefreshTotals();
     }
 
-    private void AddCartItemAddOn(CartItem item)
+    private void ShowCartItemAddOnPicker(CartItem item)
     {
-        if (string.IsNullOrWhiteSpace(item.AddOnNameInput))
+        selectedAddOnCartItem = item;
+        ApplyAddOnFilter(item);
+        OnPropertyChanged(nameof(AddOnPickerTitle));
+        IsAddOnPickerVisible = true;
+    }
+
+    private void HideAddOnPicker()
+    {
+        selectedAddOnCartItem = null;
+        AddOnOptions.Clear();
+        OnPropertyChanged(nameof(AddOnPickerTitle));
+        IsAddOnPickerVisible = false;
+    }
+
+    private async Task ShowLowStockNotificationForOrderAsync(
+        OrderDto order,
+        CancellationToken cancellationToken)
+    {
+        var orderedIngredientIds = order.Details
+            .Select(detail => detail.MenuId)
+            .OfType<Guid>()
+            .SelectMany(menuId => menuIngredientIdsByMenuId.TryGetValue(menuId, out var ingredientIds)
+                ? ingredientIds
+                : [])
+            .Distinct()
+            .ToHashSet();
+
+        if (orderedIngredientIds.Count == 0)
         {
             return;
         }
 
-        if (!decimal.TryParse(item.AddOnPriceInput, out var addOnPrice) || addOnPrice < 0)
+        var ingredients = await ingredientService.GetIngredientsAsync(cancellationToken);
+        LowStockItems.Clear();
+
+        foreach (var ingredient in ingredients
+            .Where(ingredient =>
+                orderedIngredientIds.Contains(ingredient.Id) &&
+                ingredient.IsActive &&
+                ingredient.CurrentQuantity <= ingredient.ReorderLevel)
+            .OrderBy(ingredient => ingredient.Name))
+        {
+            LowStockItems.Add(new LowStockAlertItem(
+                ingredient.Name,
+                ingredient.CurrentQuantity,
+                ingredient.ReorderLevel,
+                ingredient.UnitOfMeasure));
+        }
+
+        OnPropertyChanged(nameof(LowStockNotificationTitle));
+        IsLowStockNotificationVisible = LowStockItems.Count > 0;
+    }
+
+    private void SelectCartItemAddOn(AddOnOption addOn)
+    {
+        if (selectedAddOnCartItem is null)
         {
             return;
         }
 
-        item.AddAddOn(item.AddOnNameInput.Trim(), addOnPrice);
-        RefreshCartItem(item);
+        selectedAddOnCartItem.AddAddOn(addOn.Id, addOn.Name, Math.Max(addOn.Price, 0));
+        RefreshCartItem(selectedAddOnCartItem);
         RefreshTotals();
+        HideAddOnPicker();
+    }
+
+    private void ApplyAddOnFilter(CartItem item)
+    {
+        AddOnOptions.Clear();
+
+        if (item.MenuId is not Guid menuId)
+        {
+            return;
+        }
+
+        foreach (var addOn in allAddOnOptions.Where(addOn => addOn.MenuIds.Contains(menuId)))
+        {
+            AddOnOptions.Add(addOn);
+        }
     }
 
     private void RemoveCartItemAddOn(CartAddOn addOn)
@@ -604,6 +772,11 @@ public sealed class MainPageViewModel : ObservableObject
     {
         SignInMessage = string.Empty;
         IsSignInVisible = false;
+    }
+
+    private Guid? GetCurrentUserId()
+    {
+        return IsSignedIn ? TestAccountUserId : null;
     }
 
 }

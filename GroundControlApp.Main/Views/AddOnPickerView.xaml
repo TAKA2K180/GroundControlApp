@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GroundControlApp.Main.Views.AddOnPickerView"
+             IsVisible="{Binding IsAddOnPickerVisible}">
+
+    <Grid BackgroundColor="#99000000"
+          Padding="18">
+        <Border Padding="18"
+                MaximumWidthRequest="520"
+                BackgroundColor="#FFFFFF"
+                Stroke="#DDE3EA"
+                StrokeShape="RoundRectangle 8"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <VerticalStackLayout Spacing="3">
+                        <Label Text="{Binding AddOnPickerTitle}"
+                               FontFamily="OpenSansSemibold"
+                               FontSize="22"
+                               TextColor="#14213D" />
+                        <Label Text="Choose from available add-ons."
+                               FontSize="12"
+                               TextColor="#667085" />
+                    </VerticalStackLayout>
+
+                    <Button Grid.Column="1"
+                            Text="X"
+                            Command="{Binding HideAddOnPickerCommand}"
+                            BackgroundColor="#F4F6F8"
+                            TextColor="#344054"
+                            Style="{StaticResource PosTinyButtonStyle}" />
+                </Grid>
+
+                <BoxView Grid.Row="1"
+                         HeightRequest="1"
+                         BackgroundColor="#E4E7EC" />
+
+                <CollectionView Grid.Row="2"
+                                ItemsSource="{Binding AddOnOptions}"
+                                SelectionMode="None"
+                                HeightRequest="360">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Padding="0,28" Spacing="4">
+                            <Label Text="No add-ons available"
+                                   HorizontalTextAlignment="Center"
+                                   FontFamily="OpenSansSemibold"
+                                   TextColor="#14213D" />
+                            <Label Text="Add available menu items in the Add-On category."
+                                   HorizontalTextAlignment="Center"
+                                   FontSize="12"
+                                   TextColor="#667085" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,8"
+                                    Padding="12"
+                                    BackgroundColor="#F8FAFC"
+                                    Stroke="#DDE3EA"
+                                    StrokeShape="RoundRectangle 8">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Name}"
+                                               FontFamily="OpenSansSemibold"
+                                               FontSize="14"
+                                               TextColor="#14213D" />
+                                        <Label Text="Available for this item"
+                                               FontSize="12"
+                                               TextColor="#667085" />
+                                    </VerticalStackLayout>
+
+                                    <Label Grid.Column="1"
+                                           Text="{Binding DisplayPrice}"
+                                           FontFamily="OpenSansSemibold"
+                                           TextColor="#087443"
+                                           VerticalOptions="Center" />
+
+                                    <Button Grid.Column="2"
+                                            Text="Add"
+                                            Command="{Binding BindingContext.SelectCartItemAddOnCommand, Source={RelativeSource AncestorType={x:Type ContentView}}}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#EAF8F0"
+                                            TextColor="#087443"
+                                            Style="{StaticResource PosSmallButtonStyle}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentView>
