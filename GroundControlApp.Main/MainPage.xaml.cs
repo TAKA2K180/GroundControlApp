@@ -4,6 +4,7 @@ namespace GroundControlApp.Main
     {
         private readonly ViewModels.MainPageViewModel viewModel;
         private bool hasLoaded;
+        private bool clockStarted;
 
         public MainPage()
             : this(AppServices.GetRequiredService<ViewModels.MainPageViewModel>())
@@ -29,6 +30,18 @@ namespace GroundControlApp.Main
 
             hasLoaded = true;
             await viewModel.LoadAsync();
+
+            if (!clockStarted)
+            {
+                clockStarted = true;
+                Dispatcher.StartTimer(TimeSpan.FromSeconds(30), () =>
+                {
+                    viewModel.RefreshStatusClock();
+                    return true;
+                });
+            }
+
+            viewModel.RefreshStatusClock();
         }
 
         private void OnSizeChanged(object? sender, EventArgs e)
@@ -97,9 +110,9 @@ namespace GroundControlApp.Main
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             HeaderGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            SearchBox.SetValue(Grid.RowProperty, 0);
-            SearchBox.SetValue(Grid.ColumnProperty, 1);
-            SearchBox.SetValue(Grid.ColumnSpanProperty, 1);
+            StatusBar.SetValue(Grid.RowProperty, 0);
+            StatusBar.SetValue(Grid.ColumnProperty, 1);
+            StatusBar.SetValue(Grid.ColumnSpanProperty, 1);
             HeaderActions.SetValue(Grid.RowProperty, 0);
             HeaderActions.SetValue(Grid.ColumnProperty, 2);
 
@@ -138,9 +151,9 @@ namespace GroundControlApp.Main
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             HeaderGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            SearchBox.SetValue(Grid.RowProperty, 0);
-            SearchBox.SetValue(Grid.ColumnProperty, 1);
-            SearchBox.SetValue(Grid.ColumnSpanProperty, 1);
+            StatusBar.SetValue(Grid.RowProperty, 0);
+            StatusBar.SetValue(Grid.ColumnProperty, 1);
+            StatusBar.SetValue(Grid.ColumnSpanProperty, 1);
             HeaderActions.SetValue(Grid.RowProperty, 0);
             HeaderActions.SetValue(Grid.ColumnProperty, 2);
 
@@ -174,15 +187,16 @@ namespace GroundControlApp.Main
 
             HeaderGrid.ColumnDefinitions.Clear();
             HeaderGrid.RowDefinitions.Clear();
+            HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             HeaderGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             HeaderGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            SearchBox.SetValue(Grid.RowProperty, 1);
-            SearchBox.SetValue(Grid.ColumnProperty, 0);
-            SearchBox.SetValue(Grid.ColumnSpanProperty, 2);
+            StatusBar.SetValue(Grid.RowProperty, 1);
+            StatusBar.SetValue(Grid.ColumnProperty, 0);
+            StatusBar.SetValue(Grid.ColumnSpanProperty, 3);
             HeaderActions.SetValue(Grid.RowProperty, 0);
-            HeaderActions.SetValue(Grid.ColumnProperty, 1);
+            HeaderActions.SetValue(Grid.ColumnProperty, 2);
 
             ProductItemsLayout.Span = 2;
             ApplyPanelHeights(width: Width, height: Height, productRatio: 0.58, cartRatio: 0.44);
@@ -218,9 +232,9 @@ namespace GroundControlApp.Main
             HeaderGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             HeaderGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             HeaderGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            SearchBox.SetValue(Grid.RowProperty, 1);
-            SearchBox.SetValue(Grid.ColumnProperty, 0);
-            SearchBox.SetValue(Grid.ColumnSpanProperty, 1);
+            StatusBar.SetValue(Grid.RowProperty, 1);
+            StatusBar.SetValue(Grid.ColumnProperty, 0);
+            StatusBar.SetValue(Grid.ColumnSpanProperty, 1);
             HeaderActions.SetValue(Grid.RowProperty, 2);
             HeaderActions.SetValue(Grid.ColumnProperty, 0);
 

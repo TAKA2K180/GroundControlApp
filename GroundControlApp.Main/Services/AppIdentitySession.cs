@@ -1,5 +1,6 @@
 using GroundControlApp.Main.Models;
 using GroundControlApp.Main.ViewModels;
+using GroundControlApp.Data.DTOs;
 
 namespace GroundControlApp.Main.Services;
 
@@ -52,11 +53,31 @@ public sealed class AppIdentitySession : ObservableObject
         OnPropertyChanged(nameof(IsSignedIn));
     }
 
+    public void SignIn(UserDto user)
+    {
+        CurrentUserId = user.Id;
+        DisplayName = $"{user.FirstName} {user.LastName}";
+        Role = MapRole(user.Role);
+        OnPropertyChanged(nameof(IsSignedIn));
+    }
+
     public void SignOut()
     {
         CurrentUserId = null;
         DisplayName = "Guest";
         Role = AppRole.Guest;
         OnPropertyChanged(nameof(IsSignedIn));
+    }
+
+    private static AppRole MapRole(int role)
+    {
+        return role switch
+        {
+            1 => AppRole.Admin,
+            2 => AppRole.Manager,
+            3 => AppRole.Cashier,
+            4 => AppRole.Barista,
+            _ => AppRole.Guest
+        };
     }
 }

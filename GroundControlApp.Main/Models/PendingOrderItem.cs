@@ -31,8 +31,16 @@ public sealed class PendingOrderItem : ObservableObject
     public string Status
     {
         get => status;
-        set => SetProperty(ref status, value);
+        set
+        {
+            if (SetProperty(ref status, value))
+            {
+                OnPropertyChanged(nameof(CanFinish));
+            }
+        }
     }
+
+    public bool CanFinish => Status != "Completed";
 
     public bool IsFinishing
     {

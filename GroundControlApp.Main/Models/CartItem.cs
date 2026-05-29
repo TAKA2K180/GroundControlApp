@@ -7,6 +7,7 @@ namespace GroundControlApp.Main.Models;
 public sealed class CartItem : ObservableObject
 {
     private int quantity;
+    private decimal discountAmount;
 
     public event EventHandler? TotalChanged;
 
@@ -52,15 +53,37 @@ public sealed class CartItem : ObservableObject
 
     public decimal AddOnTotal => AddOns.Sum(addOn => addOn.Price);
 
+    public decimal GrossTotal => Quantity * (UnitPrice + AddOnTotal);
+
+    public decimal DiscountAmount
+    {
+        get => discountAmount;
+        private set
+        {
+            if (SetProperty(ref discountAmount, Math.Clamp(value, 0, GrossTotal)))
+            {
+                OnPropertyChanged(nameof(DiscountDisplay));
+                RecalculateTotals();
+            }
+        }
+    }
+
     public decimal BaseTotal => Quantity * UnitPrice;
 
-    public decimal Total => Quantity * (UnitPrice + AddOnTotal);
+    public decimal Total => Math.Max(0, GrossTotal - DiscountAmount);
 
     public string BaseTotalDisplay => $"PHP {BaseTotal:N2}";
 
     public string TotalDisplay => $"PHP {Total:N2}";
 
+    public string DiscountDisplay => DiscountAmount <= 0 ? "No discount" : $"- PHP {DiscountAmount:N2}";
+
     public string Detail => $"Qty {Quantity}{(string.IsNullOrWhiteSpace(Note) ? string.Empty : $" - {Note}")}";
+
+    public void ToggleDiscount()
+    {
+        DiscountAmount = DiscountAmount > 0 ? 0 : Math.Round(GrossTotal * 0.10m, 2);
+    }
 
     public void AddAddOn(Guid? addOnId, string name, decimal price)
     {
@@ -82,6 +105,13 @@ public sealed class CartItem : ObservableObject
     private void RecalculateTotals()
     {
         OnPropertyChanged(nameof(AddOnTotal));
+        OnPropertyChanged(nameof(GrossTotal));
+        if (DiscountAmount > GrossTotal)
+        {
+            discountAmount = GrossTotal;
+            OnPropertyChanged(nameof(DiscountAmount));
+            OnPropertyChanged(nameof(DiscountDisplay));
+        }
         OnPropertyChanged(nameof(BaseTotal));
         OnPropertyChanged(nameof(BaseTotalDisplay));
         OnPropertyChanged(nameof(Total));

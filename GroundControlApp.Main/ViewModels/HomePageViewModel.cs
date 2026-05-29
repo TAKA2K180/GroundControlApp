@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
+using GroundControlApp.Data.DTOs;
+using GroundControlApp.Data.Interfaces;
 using GroundControlApp.Main.Models;
 using GroundControlApp.Main.Services;
 using GroundControlApp.Main.Views;
@@ -10,6 +12,11 @@ namespace GroundControlApp.Main.ViewModels;
 public sealed class HomePageViewModel : ObservableObject
 {
     private readonly AppIdentitySession identitySession;
+    private readonly IUserService userService;
+    private string signInName = string.Empty;
+    private string signInPin = string.Empty;
+    private string signInMessage = string.Empty;
+    private bool isSignInVisible;
     private readonly IReadOnlyCollection<HomeNavigationItem> navigationItems =
     [
         new("POS", "Open the register, build tickets, queue orders, and finish payments.", "Register", "Live", "//MainPage", AppRole.Guest, "#12B76A", "▣"),
@@ -24,15 +31,18 @@ public sealed class HomePageViewModel : ObservableObject
 
     private readonly IReadOnlyCollection<string> footerTitles = ["POS", "Inventory", "Menu", "Sales", "Users"];
 
-    public HomePageViewModel(AppIdentitySession identitySession)
+    public HomePageViewModel(AppIdentitySession identitySession, IUserService userService)
     {
         this.identitySession = identitySession;
+        this.userService = userService;
         identitySession.PropertyChanged += OnIdentitySessionChanged;
 
         NavigationItems = [];
         FooterItems = [];
         OpenNavigationItemCommand = new AsyncRelayCommand(OpenNavigationItemAsync);
-        SignInCommand = new RelayCommand(() => identitySession.SignInTemporaryAdmin());
+        ShowSignInCommand = new RelayCommand(() => IsSignInVisible = true);
+        HideSignInCommand = new RelayCommand(HideSignIn);
+        SignInCommand = new AsyncRelayCommand(() => SignInAsync());
         SignOutCommand = new RelayCommand(() => identitySession.SignOut());
         RefreshNavigationItems();
     }
@@ -45,7 +55,35 @@ public sealed class HomePageViewModel : ObservableObject
 
     public ICommand SignInCommand { get; }
 
+    public ICommand ShowSignInCommand { get; }
+
+    public ICommand HideSignInCommand { get; }
+
     public ICommand SignOutCommand { get; }
+
+    public string SignInName
+    {
+        get => signInName;
+        set => SetProperty(ref signInName, value);
+    }
+
+    public string SignInPin
+    {
+        get => signInPin;
+        set => SetProperty(ref signInPin, value);
+    }
+
+    public string SignInMessage
+    {
+        get => signInMessage;
+        private set => SetProperty(ref signInMessage, value);
+    }
+
+    public bool IsSignInVisible
+    {
+        get => isSignInVisible;
+        private set => SetProperty(ref isSignInVisible, value);
+    }
 
     public string DisplayName => identitySession.DisplayName;
 
@@ -66,6 +104,8 @@ public sealed class HomePageViewModel : ObservableObject
     public string WelcomeText => identitySession.IsSignedIn
         ? $"Welcome back, {identitySession.DisplayName}"
         : "Start with POS or sign in for more tools";
+
+    public string SignInButtonText => "Login";
 
     private async Task OpenNavigationItemAsync(object? parameter)
     {
@@ -103,6 +143,37 @@ public sealed class HomePageViewModel : ObservableObject
         OnPropertyChanged(nameof(WelcomeText));
     }
 
+    private async Task SignInAsync(CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(SignInName) || string.IsNullOrWhiteSpace(SignInPin))
+        {
+            SignInMessage = "Enter your employee number, email, or name and PIN.";
+            return;
+        }
+
+        try
+        {
+            var user = await userService.AuthenticateAsync(
+                new AuthenticateUserDto(SignInName.Trim(), SignInPin),
+                cancellationToken);
+
+            identitySession.SignIn(user);
+            SignInMessage = string.Empty;
+            SignInPin = string.Empty;
+            IsSignInVisible = false;
+        }
+        catch
+        {
+            SignInMessage = "Login failed. Check the user is active and the PIN is correct.";
+        }
+    }
+
+    private void HideSignIn()
+    {
+        SignInMessage = string.Empty;
+        IsSignInVisible = false;
+    }
+
     private void OnIdentitySessionChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(AppIdentitySession.DisplayName)
@@ -116,6 +187,7 @@ public sealed class HomePageViewModel : ObservableObject
             OnPropertyChanged(nameof(IsSignedInVisible));
             OnPropertyChanged(nameof(FeaturedMetric));
             OnPropertyChanged(nameof(WelcomeText));
+            OnPropertyChanged(nameof(SignInButtonText));
             RefreshNavigationItems();
         }
     }

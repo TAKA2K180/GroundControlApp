@@ -22,9 +22,6 @@
                     <Label Text="Use a staff name and PIN."
                            FontSize="12"
                            TextColor="#667085" />
-                    <Label Text="Temporary sign in: Admin User / 1234"
-                           FontSize="12"
-                           TextColor="#087443" />
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="8">

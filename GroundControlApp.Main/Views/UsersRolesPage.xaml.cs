@@ -5,8 +5,8 @@ namespace GroundControlApp.Main.Views;
 
 public partial class UsersRolesPage : ContentPage
 {
-    private readonly BackOfficeProcessViewModel viewModel =
-        BackOfficeProcessViewModel.CreateUsersRoles(AppServices.GetRequiredService<IUserService>());
+    private readonly UserManagementViewModel viewModel =
+        new(AppServices.GetRequiredService<IUserService>());
 
     public UsersRolesPage()
     {

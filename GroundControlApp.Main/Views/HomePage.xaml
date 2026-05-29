@@ -20,8 +20,8 @@
                                TextColor="#667085" />
                     </VerticalStackLayout>
                     <Grid Grid.Column="1">
-                        <Button Text="Account"
-                                Command="{Binding SignInCommand}"
+                        <Button Text="{Binding SignInButtonText}"
+                                Command="{Binding ShowSignInCommand}"
                                 IsVisible="{Binding IsGuestVisible}"
                                 BackgroundColor="#14213D"
                                 TextColor="#FFFFFF"
@@ -195,5 +195,7 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </Border>
+        <views:SignInView xmlns:views="clr-namespace:GroundControlApp.Main.Views"
+                          Grid.RowSpan="2" />
     </Grid>
 </ContentPage>

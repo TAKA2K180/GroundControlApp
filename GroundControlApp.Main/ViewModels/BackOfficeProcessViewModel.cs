@@ -382,7 +382,7 @@ public sealed class BackOfficeProcessViewModel : ObservableObject
     public static BackOfficeProcessViewModel CreateSales(ISaleService saleService)
     {
         return new(
-            "Sales",
+            "Reports",
             "Review receipts from paid orders, cashier attribution, sale status, discounts, taxes, grand totals, and payment methods.",
             "PHP 18,420.00",
             "42 receipts",
